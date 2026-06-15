@@ -24,6 +24,7 @@ class Chunk(BaseModel):
     section_path: list[str] = []
     start_line: int | None = None
     end_line: int | None = None
+    vector: list[float] | None = None
 
 
 def make_chunk_id(repo_slug: str, file_path: str, anchor: str) -> str:

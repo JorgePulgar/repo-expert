@@ -44,7 +44,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T4** — Code-aware chunker (AST/symbol units: function/class with file + line span).
   - Commit: `feat(p1): code-aware chunker (symbol-level) [P1-T4]`
   - DoD: source chunked into symbol units with `file_path` + `start_line`/`end_line`.
-- [ ] **P1-T5** — Embedding step (Azure OpenAI) for chunks; batched + rate-limit safe.
+- [x] **P1-T5** — Embedding step (Azure OpenAI) for chunks; batched + rate-limit safe.
   - Commit: `feat(p1): embed chunks via azure openai [P1-T5]`
   - DoD: vectors produced for both sources; retries/backoff on 429.
 - [ ] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.

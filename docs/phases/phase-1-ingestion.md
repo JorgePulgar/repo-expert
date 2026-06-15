@@ -53,7 +53,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.
   - Commit: `feat(p1): index uploader with upsert [P1-T7]`
   - DoD: re-running updates rather than duplicates; counts logged.
-- [ ] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.
+- [x] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.
   - Commit: `feat(p1): foundry iq knowledge sources for docs and code [P1-T8]`
   - DoD: two knowledge sources exist, each with a description guiding the KB router (e.g. "code index for how-is-X-implemented").
 - [ ] **P1-T9** — Create the **Foundry IQ knowledge base** referencing both sources; attach query-planning LLM; set reasoning effort = low.

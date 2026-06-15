@@ -66,7 +66,8 @@ PUBLIC = InstanceConfig(
 PORTFOLIO = InstanceConfig(
     name="portfolio",
     description="Recruiter demo pointed at Jorge's portfolio repos + Career KB.",
-    target_repos=[TargetRepo(owner="JorgePulgar", name="repo-expert")],  # TODO: real list in Phase 6
+    # TODO(Phase 6): replace with the real portfolio repo list.
+    target_repos=[TargetRepo(owner="JorgePulgar", name="repo-expert")],
     docs_index="repo-expert-portfolio-docs",
     code_index="repo-expert-portfolio-code",
     source3=Source3Kind.CAREER_KB,

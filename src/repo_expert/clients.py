@@ -7,6 +7,7 @@ from functools import lru_cache
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
+from azure.search.documents.knowledgebases import KnowledgeBaseRetrievalClient
 from openai import AzureOpenAI
 
 from repo_expert.config.settings import get_settings
@@ -35,4 +36,15 @@ def get_search_client(index_name: str) -> SearchClient:
     s = get_settings()
     return SearchClient(
         s.azure_search_endpoint, index_name, AzureKeyCredential(s.azure_search_api_key)
+    )
+
+
+@lru_cache
+def get_kb_retrieval_client(knowledge_base_name: str) -> KnowledgeBaseRetrievalClient:
+    """Cached client for agentic retrieval against a knowledge base."""
+    s = get_settings()
+    return KnowledgeBaseRetrievalClient(
+        s.azure_search_endpoint,
+        AzureKeyCredential(s.azure_search_api_key),
+        knowledge_base_name=knowledge_base_name,
     )

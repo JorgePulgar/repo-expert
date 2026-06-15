@@ -1,6 +1,6 @@
 # Phase 2 — Retrieval Layer
 
-**Branch:** `feature/phase-2-retrieval` · **Status:** ⬜ not started
+**Branch:** `feature/phase-2-retrieval` · **Status:** ✅ done
 
 ## Context
 A clean retrieval API the LangGraph agent will call. Two kinds of retriever:
@@ -24,19 +24,19 @@ content, custom tool for the live source.
 - `GITHUB_TOKEN` in `.env` for the issues tool.
 
 ## Tasks
-- [ ] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
+- [x] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
   - Commit: `feat(p2): unified retrieval result model [P2-T1]`
   - DoD: one model returned by both retrievers; carries citation metadata.
-- [ ] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
+- [x] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
   - Commit: `feat(p2): foundry iq knowledge base retriever [P2-T2]`
   - DoD: a query returns ranked KB results with citations; reasoning effort = low (planning stays in LangGraph).
-- [ ] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
+- [x] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
   - Commit: `feat(p2): github issues/prs live retriever [P2-T3]`
   - DoD: returns matching issues/PRs (title, state, url); handles rate limits; lives outside the KB.
-- [ ] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
+- [x] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
   - Commit: `feat(p2): source registry resolves retrievers from config [P2-T4]`
   - DoD: registry returns {KB, issues} for `public` and {KB} for `portfolio`, no code change.
-- [ ] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.
+- [x] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.
   - Commit: `test(p2): retrieval integration tests [P2-T5]`
   - DoD: known query returns expected top result from KB and from the issues tool.
 

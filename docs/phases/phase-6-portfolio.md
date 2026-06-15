@@ -19,13 +19,13 @@ fix here, not a special case to hard-code.
 - Career KB content authored (project summaries, roles, stacks, outcomes).
 
 ## Tasks
-- [ ] **P6-T1** — Author Career KB content (per-project: summary, role, stack, outcomes).
+- [x] **P6-T1** — Author Career KB content (per-project: summary, role, stack, outcomes). _(provided: `docs/jorge-pulgar-career-rag.md`)_
   - Commit: `docs(p6): career knowledge base content [P6-T1]`
   - DoD: structured KB data file(s) covering target portfolio projects.
-- [ ] **P6-T2** — Career KB ingestion + index (reuse embed/upload; new index name from config).
+- [x] **P6-T2** — Career KB ingestion + index (reuse embed/upload; new index name from config).
   - Commit: `feat(p6): career kb ingestion and index [P6-T2]`
   - DoD: KB searchable via AI Search; citations point to project entries.
-- [ ] **P6-T3** — Career KB retriever + register as "source 3" for portfolio instance.
+- [x] **P6-T3** — Career source registered. _(Option C: career is folded into the Foundry IQ KB as a third knowledge source — no separate retriever; registry returns {kb} for portfolio and the KB selects across docs/code/career.)_
   - Commit: `feat(p6): career kb retriever wired into source registry [P6-T3]`
   - DoD: registry returns career_kb (not issues) when instance=portfolio; zero code change elsewhere.
 - [x] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).

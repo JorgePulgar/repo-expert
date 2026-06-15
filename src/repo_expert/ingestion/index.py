@@ -92,8 +92,11 @@ def create_indexes(cfg: InstanceConfig | None = None) -> list[str]:
     cfg = cfg or get_instance_config()
     dim = get_embedding_dim()
     client = get_search_index_client()
+    names = [cfg.docs_index, cfg.code_index]
+    if cfg.source3_index:  # career KB index (portfolio)
+        names.append(cfg.source3_index)
     created: list[str] = []
-    for name in (cfg.docs_index, cfg.code_index):
+    for name in names:
         client.create_or_update_index(_build_index(name, dim))
         logger.info("Created/updated index %s (dim=%d)", name, dim)
         created.append(name)

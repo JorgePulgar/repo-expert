@@ -10,7 +10,8 @@ import re
 import subprocess
 from pathlib import Path
 
-from repo_expert.config.instance import TargetRepo
+from repo_expert.config.instance import InstanceConfig, TargetRepo, get_instance_config
+from repo_expert.ingestion.discovery import discover_files
 from repo_expert.ingestion.models import Chunk, make_chunk_id
 
 _HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
@@ -42,9 +43,6 @@ def _section_anchor(section_path: list[str], title: str, index: int) -> str:
     return f"intro-{index}"
 
 
-def iter_markdown_files(repo_root: Path) -> list[Path]:
-    """All ``*.md`` files in the repo (sorted, stable)."""
-    return sorted(repo_root.rglob("*.md"))
 
 
 def chunk_markdown_file(
@@ -106,10 +104,14 @@ def chunk_markdown_file(
     return [c for c in chunks if c.content]
 
 
-def chunk_repo_markdown(repo_root: Path, repo: TargetRepo) -> list[Chunk]:
-    """Chunk every markdown file in a repo checkout."""
+def chunk_repo_markdown(
+    repo_root: Path, repo: TargetRepo, cfg: InstanceConfig | None = None
+) -> list[Chunk]:
+    """Chunk the markdown files selected by the instance's ``docs_globs``."""
+    cfg = cfg or get_instance_config()
     branch = _branch(repo_root)
+    files = discover_files(repo_root, cfg.docs_globs, cfg.exclude_globs)
     chunks: list[Chunk] = []
-    for f in iter_markdown_files(repo_root):
+    for f in files:
         chunks.extend(chunk_markdown_file(f, repo_root, repo, branch))
     return chunks

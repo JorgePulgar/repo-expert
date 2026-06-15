@@ -35,7 +35,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T1** — Provision Azure AI Search (agentic-capable) + Foundry project + Azure OpenAI deployments; record endpoints/keys in `.env`.
   - Commit: `docs(p1): document Foundry IQ + AI Search provisioning [P1-T1]`
   - DoD: services reachable; embedding + query-planning deployments exist; steps written down.
-- [ ] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.
+- [x] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.
   - Commit: `feat(p1): repo fetcher for target repo [P1-T2]`
   - DoD: given config, repo content present locally; idempotent re-run.
 - [ ] **P1-T3** — Markdown chunker (split by heading hierarchy; keep section path + source URL).

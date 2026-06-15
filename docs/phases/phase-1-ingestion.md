@@ -47,7 +47,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T5** — Embedding step (Azure OpenAI) for chunks; batched + rate-limit safe.
   - Commit: `feat(p1): embed chunks via azure openai [P1-T5]`
   - DoD: vectors produced for both sources; retries/backoff on 429.
-- [ ] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.
+- [x] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.
   - Commit: `feat(p1): ai search index schemas (docs, code) [P1-T6]`
   - DoD: indexes created with the fields Foundry IQ needs to reference them as knowledge sources.
 - [ ] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from functools import lru_cache
 
 from openai import APIError, RateLimitError
 
@@ -15,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 _MAX_RETRIES = 6
 _BASE_DELAY = 2.0  # seconds; exponential backoff
+
+
+@lru_cache
+def get_embedding_dim() -> int:
+    """Probe the embedding deployment once to learn its vector dimension."""
+    return len(embed_texts(["dimension probe"])[0])
 
 
 def embed_texts(texts: list[str], batch_size: int = 64) -> list[list[float]]:

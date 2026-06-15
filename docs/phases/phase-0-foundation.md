@@ -1,6 +1,6 @@
 # Phase 0 — Repo & Foundation
 
-**Branch:** `feature/phase-0-foundation` · **Status:** ⬜ not started
+**Branch:** `feature/phase-0-foundation` · **Status:** 🟡 in progress
 
 ## Context
 Stand up the skeleton everything else builds on: project layout, Python tooling (uv),
@@ -17,7 +17,7 @@ to undo once 8 phases sit on top. Get the seams right first.
 - GitHub account + ability to create a remote repo.
 
 ## Tasks
-- [ ] **P0-T1** — Create GitHub remote and push initial `main`.
+- [x] **P0-T1** — Create GitHub remote and push initial `main`.
   - Commit: `chore(p0): initialize repo with CLAUDE.md and phase docs [P0-T1]`
   - DoD: remote exists, `main` pushed with CLAUDE.md + `docs/phases/`, branch protection optional.
 - [ ] **P0-T2** — Initialize uv project (`pyproject.toml`, Python 3.12, `uv.lock`).

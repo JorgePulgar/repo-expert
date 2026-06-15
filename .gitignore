@@ -23,7 +23,8 @@ data/
 node_modules/
 frontend/dist/
 
-# Editor / OS
+# Agent / editor / OS
+.claude/
 .idea/
 .DS_Store
 Thumbs.db

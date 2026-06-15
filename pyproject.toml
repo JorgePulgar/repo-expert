@@ -39,5 +39,8 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not integration'"
 pythonpath = ["src"]
+markers = [
+    "integration: hits live Azure AI Search / GitHub (needs .env; run with -m integration)",
+]

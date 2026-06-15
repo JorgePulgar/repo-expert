@@ -1,6 +1,6 @@
 # Phase 2 — Retrieval Layer
 
-**Branch:** `feature/phase-2-retrieval` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-2-retrieval` · **Status:** ✅ done
 
 ## Context
 A clean retrieval API the LangGraph agent will call. Two kinds of retriever:
@@ -36,7 +36,7 @@ content, custom tool for the live source.
 - [x] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
   - Commit: `feat(p2): source registry resolves retrievers from config [P2-T4]`
   - DoD: registry returns {KB, issues} for `public` and {KB} for `portfolio`, no code change.
-- [ ] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.
+- [x] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.
   - Commit: `test(p2): retrieval integration tests [P2-T5]`
   - DoD: known query returns expected top result from KB and from the issues tool.
 

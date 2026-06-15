@@ -6,6 +6,8 @@ import logging
 
 from fastapi import APIRouter
 
+from repo_expert.agent.agent import ask
+from repo_expert.api.schemas import AskRequest, AskResponse
 from repo_expert.clients import get_search_client
 from repo_expert.config.instance import get_instance_config
 
@@ -37,3 +39,10 @@ def health() -> dict:
         "repo": cfg.primary_repo.slug,
         "indexes": indexes,
     }
+
+
+@router.post("/ask", response_model=AskResponse)
+def ask_endpoint(request: AskRequest) -> AskResponse:
+    """Answer a question about the active instance's repo, with citations."""
+    result = ask(request.question)
+    return AskResponse(**result.model_dump())

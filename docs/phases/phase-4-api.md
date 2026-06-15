@@ -21,7 +21,7 @@ Azure deployment (Phase 7) and the optional frontend (Phase 8).
 - [x] **P4-T2** — `GET /health` (liveness + which instance/indexes active).
   - Commit: `feat(p4): health endpoint [P4-T2]`
   - DoD: returns 200 with instance name and index status.
-- [ ] **P4-T3** — `POST /ask` (validated request → agent → structured answer+citations+route).
+- [x] **P4-T3** — `POST /ask` (validated request → agent → structured answer+citations+route).
   - Commit: `feat(p4): /ask endpoint [P4-T3]`
   - DoD: returns answer, citations, and route taken; validation errors → 422.
 - [ ] **P4-T4** — Error handling + request logging/timing middleware.

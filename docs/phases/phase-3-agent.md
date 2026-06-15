@@ -1,6 +1,6 @@
 # Phase 3 — LangGraph Agent
 
-**Branch:** `feature/phase-3-agent` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-3-agent` · **Status:** ✅ done
 
 ## Context
 The CV-relevant core and the **build** half of build-vs-buy. A **LangGraph** agent
@@ -48,7 +48,7 @@ AND "integrated Foundry IQ agentic retrieval" AND "made the build-vs-buy call".
 - [x] **P3-T7** — Agent entrypoint `ask(question) -> answer+citations+route` + graph diagram export.
   - Commit: `feat(p3): agent ask() entrypoint and graph export [P3-T7]`
   - DoD: callable function returns structured answer; mermaid/png of graph saved for docs.
-- [ ] **P3-T8** — Unit tests for router + grounding with fixtures.
+- [x] **P3-T8** — Unit tests for router + grounding with fixtures.
   - Commit: `test(p3): router and grounding unit tests [P3-T8]`
   - DoD: routing (KB vs issues) and grounding behavior asserted on representative questions.
 

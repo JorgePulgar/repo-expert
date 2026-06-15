@@ -1,6 +1,6 @@
 # Phase 0 — Repo & Foundation
 
-**Branch:** `feature/phase-0-foundation` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-0-foundation` · **Status:** ✅ done
 
 ## Context
 Stand up the skeleton everything else builds on: project layout, Python tooling (uv),
@@ -35,7 +35,7 @@ to undo once 8 phases sit on top. Get the seams right first.
 - [x] **P0-T6** — Dev tooling: ruff (lint+format), pytest, pre-commit hook, `make`/`uv` task shortcuts.
   - Commit: `chore(p0): add ruff, pytest, pre-commit [P0-T6]`
   - DoD: `uv run ruff check .` and `uv run pytest` both pass on the skeleton.
-- [ ] **P0-T7** — Smoke test + minimal `README` stub describing how to run.
+- [x] **P0-T7** — Smoke test + minimal `README` stub describing how to run.
   - Commit: `test(p0): config + settings smoke tests [P0-T7]`
   - DoD: a test asserts each instance config loads and exposes required fields.
 

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from repo_expert.api.routes import router
 from repo_expert.config.instance import get_instance_config
@@ -33,6 +35,26 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
     app.include_router(router)
+
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        start = time.perf_counter()
+        response = await call_next(request)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        logger.info(
+            "%s %s -> %d (%.0f ms)",
+            request.method, request.url.path, response.status_code, elapsed_ms,
+        )
+        return response
+
+    @app.exception_handler(Exception)
+    async def unhandled_error(request: Request, exc: Exception):
+        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal error processing the request."},
+        )
+
     return app
 
 

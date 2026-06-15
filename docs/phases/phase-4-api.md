@@ -24,7 +24,7 @@ Azure deployment (Phase 7) and the optional frontend (Phase 8).
 - [x] **P4-T3** — `POST /ask` (validated request → agent → structured answer+citations+route).
   - Commit: `feat(p4): /ask endpoint [P4-T3]`
   - DoD: returns answer, citations, and route taken; validation errors → 422.
-- [ ] **P4-T4** — Error handling + request logging/timing middleware.
+- [x] **P4-T4** — Error handling + request logging/timing middleware.
   - Commit: `feat(p4): error handling and request logging [P4-T4]`
   - DoD: upstream failures → clean 5xx with message; per-request latency logged.
 - [ ] **P4-T5** — Optional streaming response for `/ask` (SSE) — defer if time-constrained.

@@ -24,7 +24,7 @@ against regressions when tuning chunking/routing.
 - [x] **P5-T3** — Groundedness/faithfulness metric (LLM-as-judge against retrieved evidence).
   - Commit: `feat(p5): groundedness eval harness [P5-T3]`
   - DoD: scores each answer for support by cited evidence; aggregate reported.
-- [ ] **P5-T4** — Eval runner CLI (`uv run repo-expert eval`) + results report (markdown/json).
+- [x] **P5-T4** — Eval runner CLI (`uv run repo-expert eval`) + results report (markdown/json).
   - Commit: `feat(p5): eval runner cli with report output [P5-T4]`
   - DoD: one command produces a results report committed under `docs/`.
 - [ ] **P5-T5** — Record baseline results + brief analysis in README/ARCHITECTURE.

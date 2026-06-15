@@ -1,0 +1,317 @@
+{
+  "instance": "public",
+  "repo": "fastapi/fastapi",
+  "generated_at": "2026-06-15T12:13:40+00:00",
+  "relevance": {
+    "n": 16,
+    "routing_accuracy": 1.0,
+    "relevance_hit_at_k": 0.688,
+    "relevance_by_kind": {
+      "code": 0.6,
+      "docs": 1.0,
+      "issue": 0.0,
+      "mixed": 1.0
+    },
+    "top_k": 6,
+    "items": [
+      {
+        "id": "code-depends",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "code-apirouter",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": false
+      },
+      {
+        "id": "code-query-fn",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "code-fastapi-app",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": false
+      },
+      {
+        "id": "code-jsonable-encoder",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-query-params",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-path-params",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-request-body",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-dependencies",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-security",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-background-tasks",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "docs-custom-response",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "issue-backgroundtasks",
+        "expected_sources": [
+          "issues"
+        ],
+        "predicted_route": [
+          "issues"
+        ],
+        "routing_ok": true,
+        "relevant": false
+      },
+      {
+        "id": "issue-dependency-overrides",
+        "expected_sources": [
+          "issues"
+        ],
+        "predicted_route": [
+          "issues"
+        ],
+        "routing_ok": true,
+        "relevant": false
+      },
+      {
+        "id": "issue-websocket",
+        "expected_sources": [
+          "issues"
+        ],
+        "predicted_route": [
+          "issues"
+        ],
+        "routing_ok": true,
+        "relevant": false
+      },
+      {
+        "id": "multi-middleware",
+        "expected_sources": [
+          "kb",
+          "issues"
+        ],
+        "predicted_route": [
+          "kb",
+          "issues"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      }
+    ]
+  },
+  "groundedness": {
+    "n": 16,
+    "faithfulness_rate": 0.875,
+    "mean_faithfulness_score": 0.95,
+    "self_grounded_rate": 0.875,
+    "items": [
+      {
+        "id": "code-depends",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "code-apirouter",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "code-query-fn",
+        "faithful": false,
+        "score": 0.5,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "code-fastapi-app",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "code-jsonable-encoder",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-query-params",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-path-params",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-request-body",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-dependencies",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-security",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-background-tasks",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "docs-custom-response",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": false
+      },
+      {
+        "id": "issue-backgroundtasks",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "issue-dependency-overrides",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "issue-websocket",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": true,
+        "fallback_used": true
+      },
+      {
+        "id": "multi-middleware",
+        "faithful": false,
+        "score": 0.7,
+        "self_grounded": true,
+        "fallback_used": true
+      }
+    ]
+  }
+}

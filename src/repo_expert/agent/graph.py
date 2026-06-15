@@ -11,7 +11,7 @@ from langgraph.graph import END, START, StateGraph
 from repo_expert.agent.llm import chat_json
 from repo_expert.agent.state import AgentState
 from repo_expert.config.instance import get_instance_config
-from repo_expert.retrieval.registry import available_sources
+from repo_expert.retrieval.registry import available_sources, get_retrievers
 
 MAX_ATTEMPTS = 2
 
@@ -45,7 +45,13 @@ def router_node(state: AgentState) -> AgentState:
 
 
 def retrieve_node(state: AgentState) -> AgentState:
-    return {"results": []}
+    retrievers = get_retrievers(get_instance_config())
+    results = []
+    for name in state.get("route", ["kb"]):
+        retriever = retrievers.get(name)
+        if retriever:
+            results.extend(retriever(state["question"], top=6))
+    return {"results": results}
 
 
 def generate_node(state: AgentState) -> AgentState:

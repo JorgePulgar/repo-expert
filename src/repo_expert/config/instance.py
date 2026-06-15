@@ -46,6 +46,11 @@ class InstanceConfig(BaseModel):
     # Index name for source 3 when it is indexed (career_kb). None for live issues.
     source3_index: str | None = None
 
+    # Ingestion path filters (config-driven; control embedding cost/scope).
+    docs_globs: list[str] = ["**/*.md"]
+    code_globs: list[str] = ["**/*.py"]
+    exclude_globs: list[str] = []
+
     @property
     def primary_repo(self) -> TargetRepo:
         return self.target_repos[0]
@@ -61,6 +66,10 @@ PUBLIC = InstanceConfig(
     code_index="repo-expert-public-code",
     source3=Source3Kind.ISSUES,
     source3_index=None,  # issues are queried live, not indexed
+    # English docs + source package only (fastapi ships docs in ~30 languages).
+    docs_globs=["README.md", "docs/en/docs/**/*.md"],
+    code_globs=["fastapi/**/*.py"],
+    exclude_globs=["**/tests/**", "**/test_*.py"],
 )
 
 PORTFOLIO = InstanceConfig(

@@ -1,6 +1,6 @@
 # Phase 1 — Ingestion & Foundry IQ Knowledge Base
 
-**Branch:** `feature/phase-1-ingestion` · **Status:** ⬜ not started
+**Branch:** `feature/phase-1-ingestion` · **Status:** ✅ done
 
 ## Context
 Turn a target repo into a **Foundry IQ knowledge base**. We keep custom, code-aware
@@ -32,34 +32,34 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - Microsoft Foundry (new) project (portal) OR plan to create KB programmatically.
 
 ## Tasks
-- [ ] **P1-T1** — Provision Azure AI Search (agentic-capable) + Foundry project + Azure OpenAI deployments; record endpoints/keys in `.env`.
+- [x] **P1-T1** — Provision Azure AI Search (agentic-capable) + Foundry project + Azure OpenAI deployments; record endpoints/keys in `.env`.
   - Commit: `docs(p1): document Foundry IQ + AI Search provisioning [P1-T1]`
   - DoD: services reachable; embedding + query-planning deployments exist; steps written down.
-- [ ] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.
+- [x] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.
   - Commit: `feat(p1): repo fetcher for target repo [P1-T2]`
   - DoD: given config, repo content present locally; idempotent re-run.
-- [ ] **P1-T3** — Markdown chunker (split by heading hierarchy; keep section path + source URL).
+- [x] **P1-T3** — Markdown chunker (split by heading hierarchy; keep section path + source URL).
   - Commit: `feat(p1): markdown chunker by heading [P1-T3]`
   - DoD: README + docs/ chunked; each chunk has title, section path, file path, repo-relative link.
-- [ ] **P1-T4** — Code-aware chunker (AST/symbol units: function/class with file + line span).
+- [x] **P1-T4** — Code-aware chunker (AST/symbol units: function/class with file + line span).
   - Commit: `feat(p1): code-aware chunker (symbol-level) [P1-T4]`
   - DoD: source chunked into symbol units with `file_path` + `start_line`/`end_line`.
-- [ ] **P1-T5** — Embedding step (Azure OpenAI) for chunks; batched + rate-limit safe.
+- [x] **P1-T5** — Embedding step (Azure OpenAI) for chunks; batched + rate-limit safe.
   - Commit: `feat(p1): embed chunks via azure openai [P1-T5]`
   - DoD: vectors produced for both sources; retries/backoff on 429.
-- [ ] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.
+- [x] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.
   - Commit: `feat(p1): ai search index schemas (docs, code) [P1-T6]`
   - DoD: indexes created with the fields Foundry IQ needs to reference them as knowledge sources.
-- [ ] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.
+- [x] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.
   - Commit: `feat(p1): index uploader with upsert [P1-T7]`
   - DoD: re-running updates rather than duplicates; counts logged.
-- [ ] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.
+- [x] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.
   - Commit: `feat(p1): foundry iq knowledge sources for docs and code [P1-T8]`
   - DoD: two knowledge sources exist, each with a description guiding the KB router (e.g. "code index for how-is-X-implemented").
-- [ ] **P1-T9** — Create the **Foundry IQ knowledge base** referencing both sources; attach query-planning LLM; set reasoning effort = low.
+- [x] **P1-T9** — Create the **Foundry IQ knowledge base** referencing both sources (basic GA KB; no LLM attached — LangGraph owns reasoning. LLM query planning + reasoning-effort tuning are preview-only in GA SDK 12.0.0).
   - Commit: `feat(p1): foundry iq knowledge base over docs+code [P1-T9]`
-  - DoD: KB exists; `knowledge_base_retrieve` returns grounded results with citations for a test query.
-- [ ] **P1-T10** — `ingest` CLI (`uv run repo-expert ingest`): fetch → chunk → embed → upload → (re)build KB, driven by active config.
+  - DoD: KB exists; `knowledge_base_retrieve` returns grounded results with citations for a test query. (Note: references expose `title` + `docKey`=chunk id; resolve full citation via index lookup in Phase 2 — `sourceData` returns null in GA.)
+- [x] **P1-T10** — `ingest` CLI (`uv run repo-expert ingest`): fetch → chunk → embed → upload → (re)build KB, driven by active config.
   - Commit: `feat(p1): ingest cli entrypoint [P1-T10]`
   - DoD: one command takes the active instance from clean state to a queryable KB.
 

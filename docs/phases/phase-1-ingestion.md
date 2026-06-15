@@ -1,6 +1,6 @@
 # Phase 1 — Ingestion & Foundry IQ Knowledge Base
 
-**Branch:** `feature/phase-1-ingestion` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-1-ingestion` · **Status:** ✅ done
 
 ## Context
 Turn a target repo into a **Foundry IQ knowledge base**. We keep custom, code-aware

@@ -63,7 +63,16 @@ def grounding_node(state: AgentState) -> AgentState:
 
 
 def fallback_node(state: AgentState) -> AgentState:
-    return {"attempts": state.get("attempts", 0) + 1, "fallback_used": True}
+    """On a weak/ungrounded answer, widen the route to all available sources."""
+    all_sources = available_sources(get_instance_config())
+    current = set(state.get("route", []))
+    widened = [s for s in all_sources if s not in current] or list(all_sources)
+    new_route = list(dict.fromkeys([*state.get("route", []), *widened]))
+    return {
+        "route": new_route,
+        "attempts": state.get("attempts", 0) + 1,
+        "fallback_used": True,
+    }
 
 
 # --- Edge logic ----------------------------------------------------------------

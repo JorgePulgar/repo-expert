@@ -36,7 +36,7 @@ AND "integrated Foundry IQ agentic retrieval" AND "made the build-vs-buy call".
 - [x] **P3-T3** — Retrieve node: call selected retriever(s) via the registry.
   - Commit: `feat(p3): retrieve node via source registry [P3-T3]`
   - DoD: populates state with results + citations from KB and/or the live tool.
-- [ ] **P3-T4** — Fallback logic: weak/empty KB → try issues (and vice versa); "is this broken?" → issues, then code if unresolved.
+- [x] **P3-T4** — Fallback logic: weak/empty KB → try issues (and vice versa); "is this broken?" → issues, then code if unresolved.
   - Commit: `feat(p3): fallback routing on weak/empty retrieval [P3-T4]`
   - DoD: low-confidence/empty retrieval triggers the secondary source; logged.
 - [ ] **P3-T5** — Corrective/grounding node: verify draft against retrieved evidence; re-retrieve or revise if unsupported.

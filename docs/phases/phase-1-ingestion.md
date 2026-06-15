@@ -1,6 +1,6 @@
 # Phase 1 — Ingestion & Foundry IQ Knowledge Base
 
-**Branch:** `feature/phase-1-ingestion` · **Status:** ⬜ not started
+**Branch:** `feature/phase-1-ingestion` · **Status:** 🟡 in progress
 
 ## Context
 Turn a target repo into a **Foundry IQ knowledge base**. We keep custom, code-aware
@@ -32,7 +32,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - Microsoft Foundry (new) project (portal) OR plan to create KB programmatically.
 
 ## Tasks
-- [ ] **P1-T1** — Provision Azure AI Search (agentic-capable) + Foundry project + Azure OpenAI deployments; record endpoints/keys in `.env`.
+- [x] **P1-T1** — Provision Azure AI Search (agentic-capable) + Foundry project + Azure OpenAI deployments; record endpoints/keys in `.env`.
   - Commit: `docs(p1): document Foundry IQ + AI Search provisioning [P1-T1]`
   - DoD: services reachable; embedding + query-planning deployments exist; steps written down.
 - [ ] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.

@@ -34,7 +34,10 @@ def _resolve_docs(cfg: InstanceConfig, keys: list[str]) -> dict[str, dict]:
     The key field isn't filterable, so resolve each key with ``get_document``,
     trying the docs index then the code index.
     """
-    clients = [get_search_client(cfg.docs_index), get_search_client(cfg.code_index)]
+    index_names = [cfg.docs_index, cfg.code_index]
+    if cfg.source3_index:  # career KB index (portfolio)
+        index_names.append(cfg.source3_index)
+    clients = [get_search_client(i) for i in index_names]
     docs: dict[str, dict] = {}
     for key in dict.fromkeys(keys):  # de-dup, preserve order
         for client in clients:

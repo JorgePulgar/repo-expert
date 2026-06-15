@@ -85,8 +85,10 @@ def generate_node(state: AgentState) -> AgentState:
     if not results:
         return {"draft": "", "answer": "I don't know — no relevant sources found.", "citations": []}
     sources = _format_sources(results)
+    scope = get_instance_config().scope_prompt
+    system = f"{_GENERATE_SYSTEM}\n\n{scope}" if scope else _GENERATE_SYSTEM
     answer = chat(
-        _GENERATE_SYSTEM,
+        system,
         f"Sources:\n{sources}\n\nQuestion: {state['question']}",
     )
     citations = [r.citation for r in results[:_CONTEXT_LIMIT]]

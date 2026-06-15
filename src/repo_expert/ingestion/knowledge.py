@@ -21,7 +21,7 @@ from azure.search.documents.indexes.models import (
 )
 
 from repo_expert.clients import get_search_index_client
-from repo_expert.config.instance import InstanceConfig, get_instance_config
+from repo_expert.config.instance import InstanceConfig, Source3Kind, get_instance_config
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,18 @@ _CODE_KS_DESC = (
     "Source code symbols (functions and classes with file/line spans). Use for "
     "'how is X implemented?' and code-behavior questions."
 )
+_CAREER_KS_DESC = (
+    "Career knowledge base: Jorge Pulgar's role, contributions, outcomes, tech "
+    "stack, and recruiter-facing summaries per project. Use for questions about "
+    "Jorge's experience, which projects used a technology, and what he built."
+)
+
+
+def _career_indexes(cfg: InstanceConfig) -> list[tuple[str, str]]:
+    """(index, description) for the career source when this instance has one."""
+    if cfg.source3 is Source3Kind.CAREER_KB and cfg.source3_index:
+        return [(cfg.source3_index, _CAREER_KS_DESC)]
+    return []
 
 
 def _ks_name(index_name: str) -> str:
@@ -78,6 +90,7 @@ def create_knowledge_sources(cfg: InstanceConfig | None = None) -> list[str]:
         _make_knowledge_source(cfg.docs_index, _DOCS_KS_DESC),
         _make_knowledge_source(cfg.code_index, _CODE_KS_DESC),
     ]
+    sources += [_make_knowledge_source(idx, desc) for idx, desc in _career_indexes(cfg)]
     for ks in sources:
         client.create_or_update_knowledge_source(ks)
         logger.info("Created/updated knowledge source %s", ks.name)
@@ -89,13 +102,15 @@ def create_knowledge_base(cfg: InstanceConfig | None = None) -> str:
     cfg = cfg or get_instance_config()
     client = get_search_index_client()
     name = kb_name(cfg)
+    refs = [
+        KnowledgeSourceReference(name=_ks_name(cfg.docs_index)),
+        KnowledgeSourceReference(name=_ks_name(cfg.code_index)),
+    ]
+    refs += [KnowledgeSourceReference(name=_ks_name(idx)) for idx, _ in _career_indexes(cfg)]
     kb = KnowledgeBase(
         name=name,
         description=f"Repo Expert knowledge base for the {cfg.name} instance.",
-        knowledge_sources=[
-            KnowledgeSourceReference(name=_ks_name(cfg.docs_index)),
-            KnowledgeSourceReference(name=_ks_name(cfg.code_index)),
-        ],
+        knowledge_sources=refs,
     )
     client.create_or_update_knowledge_base(kb)
     logger.info("Created/updated knowledge base %s", name)

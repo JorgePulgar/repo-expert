@@ -1,0 +1,72 @@
+[
+  {
+    "id": "career-licitai-role",
+    "question": "What was Jorge Pulgar's role in LicitAI and what did he build?",
+    "expected_sources": ["kb"],
+    "expected_kind": "career",
+    "must_include": ["licitai"]
+  },
+  {
+    "id": "career-azure-search-projects",
+    "question": "Which of Jorge's projects use Azure AI Search?",
+    "expected_sources": ["kb"],
+    "expected_kind": "career",
+    "must_include": ["rag assistants platform", "licitai"]
+  },
+  {
+    "id": "career-certifications",
+    "question": "What Microsoft certifications does Jorge Pulgar hold?",
+    "expected_sources": ["kb"],
+    "expected_kind": "career",
+    "must_include": ["certification"]
+  },
+  {
+    "id": "career-datarmony",
+    "question": "What did Jorge do during his internship at Datarmony?",
+    "expected_sources": ["kb"],
+    "expected_kind": "career",
+    "must_include": ["datarmony", "professional experience"]
+  },
+  {
+    "id": "career-location",
+    "question": "Where is Jorge based and is he open to relocation?",
+    "expected_sources": ["kb"],
+    "expected_kind": "career",
+    "must_include": ["availability", "profile summary"]
+  },
+  {
+    "id": "repo-rag-assistants",
+    "question": "How does the RAG Assistants Platform isolate each assistant's data?",
+    "expected_sources": ["kb"],
+    "expected_kind": null,
+    "must_include": ["rag-assistants-platform"]
+  },
+  {
+    "id": "repo-interview-agent",
+    "question": "What does the interview preparation agent do?",
+    "expected_sources": ["kb"],
+    "expected_kind": null,
+    "must_include": ["interview-preparation-agent"]
+  },
+  {
+    "id": "repo-fraud-autoencoder",
+    "question": "How does the fraud autoencoder detect anomalous transactions?",
+    "expected_sources": ["kb"],
+    "expected_kind": null,
+    "must_include": ["fraud-autoencoder"]
+  },
+  {
+    "id": "repo-clarity-bank",
+    "question": "How does ClarityBank categorise bank transactions?",
+    "expected_sources": ["kb"],
+    "expected_kind": null,
+    "must_include": ["clarity-bank"]
+  },
+  {
+    "id": "repo-invoice-analyzer",
+    "question": "How does the invoice analyzer extract data from invoices?",
+    "expected_sources": ["kb"],
+    "expected_kind": null,
+    "must_include": ["ai-invoice-analyzer"]
+  }
+]

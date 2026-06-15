@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from repo_expert.config.instance import InstanceConfig, get_instance_config
+from repo_expert.ingestion.career import chunk_career_doc
 from repo_expert.ingestion.code import chunk_repo_code
 from repo_expert.ingestion.embed import embed_chunks
 from repo_expert.ingestion.fetch import fetch_repo
@@ -37,13 +38,19 @@ def ingest(cfg: InstanceConfig | None = None) -> dict[str, int]:
 
     embed_chunks(docs)
     embed_chunks(code)
-
     n_docs = upload_chunks(cfg.docs_index, docs)
     n_code = upload_chunks(cfg.code_index, code)
+    summary = {cfg.docs_index: n_docs, cfg.code_index: n_code}
+
+    # Career KB source (portfolio): a local markdown file indexed into source3_index.
+    career = chunk_career_doc(cfg)
+    if career and cfg.source3_index:
+        embed_chunks(career)
+        summary[cfg.source3_index] = upload_chunks(cfg.source3_index, career)
+        logger.info("Chunked %d career entries", len(career))
 
     create_knowledge_sources(cfg)
     create_knowledge_base(cfg)
 
-    summary = {cfg.docs_index: n_docs, cfg.code_index: n_code}
     logger.info("Ingestion complete: %s", summary)
     return summary

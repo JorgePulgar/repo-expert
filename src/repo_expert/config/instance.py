@@ -51,6 +51,14 @@ class InstanceConfig(BaseModel):
     code_globs: list[str] = ["**/*.py"]
     exclude_globs: list[str] = []
 
+    # Career KB source: a local markdown file ingested into source3_index
+    # (portfolio instance only). Path is relative to the project root.
+    career_doc: str | None = None
+
+    # Optional guardrail appended to the generation prompt to scope answers
+    # (e.g. portfolio instance declines off-topic questions).
+    scope_prompt: str | None = None
+
     @property
     def primary_repo(self) -> TargetRepo:
         return self.target_repos[0]
@@ -72,15 +80,39 @@ PUBLIC = InstanceConfig(
     exclude_globs=["**/tests/**", "**/test_*.py"],
 )
 
+_PORTFOLIO_REPOS = [
+    "ai-invoice-analyzer",
+    "Job-Application-Multi-Agent-System",
+    "interview-preparation-agent",
+    "clarity-bank",
+    "fraud-autoencoder",
+    "Large-Codebases-AI-Layer",
+    "OCR-and-ML-Pipeline-for-Menu-Predictions",
+    "Rag-Assistants-Platform",
+]
+
 PORTFOLIO = InstanceConfig(
     name="portfolio",
     description="Recruiter demo pointed at Jorge's portfolio repos + Career KB.",
-    # TODO(Phase 6): replace with the real portfolio repo list.
-    target_repos=[TargetRepo(owner="JorgePulgar", name="repo-expert")],
+    target_repos=[TargetRepo(owner="JorgePulgar", name=r) for r in _PORTFOLIO_REPOS],
     docs_index="repo-expert-portfolio-docs",
     code_index="repo-expert-portfolio-code",
     source3=Source3Kind.CAREER_KB,
     source3_index="repo-expert-portfolio-career",
+    career_doc="docs/jorge-pulgar-career-rag.md",
+    scope_prompt=(
+        "You ONLY answer questions about Jorge Pulgar — his background, skills, "
+        "projects, experience, and career — and the code/docs of his portfolio "
+        "repositories. If the question is unrelated to Jorge or his work, politely "
+        "decline in one sentence and state that you only cover Jorge's portfolio."
+    ),
+    # All markdown docs + Python sources across the repos; skip vendored/build dirs.
+    docs_globs=["**/*.md"],
+    code_globs=["**/*.py"],
+    exclude_globs=[
+        "**/node_modules/**", "**/.venv/**", "**/venv/**", "**/dist/**",
+        "**/build/**", "**/.git/**", "**/tests/**", "**/test_*.py", "**/site-packages/**",
+    ],
 )
 
 _INSTANCES: dict[str, InstanceConfig] = {c.name: c for c in (PUBLIC, PORTFOLIO)}

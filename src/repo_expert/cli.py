@@ -22,7 +22,10 @@ def _cmd_eval(args: argparse.Namespace) -> None:
     from repo_expert.eval.runner import run_eval, write_report
 
     report = run_eval(args.instance)
-    md, js = write_report(report)
+    inst = report["instance"]
+    md, js = write_report(
+        report, f"docs/eval-results-{inst}.md", f"docs/eval-results-{inst}.json"
+    )
     rel, gnd = report["relevance"], report["groundedness"]
     print(f"Eval complete ({report['instance']}, n={rel['n']}):")
     print(f"  routing accuracy      : {rel['routing_accuracy']}")

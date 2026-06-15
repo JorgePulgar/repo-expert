@@ -1,6 +1,6 @@
 # Phase 6 — Portfolio Instance
 
-**Branch:** `feature/phase-6-portfolio` · **Status:** ⬜ not started
+**Branch:** `feature/phase-6-portfolio` · **Status:** ✅ done
 
 ## Context
 The recruiter demo: **same app, different data**. Prove the config-driven design by
@@ -19,25 +19,25 @@ fix here, not a special case to hard-code.
 - Career KB content authored (project summaries, roles, stacks, outcomes).
 
 ## Tasks
-- [ ] **P6-T1** — Author Career KB content (per-project: summary, role, stack, outcomes).
+- [x] **P6-T1** — Author Career KB content (per-project: summary, role, stack, outcomes). _(provided: `docs/jorge-pulgar-career-rag.md`)_
   - Commit: `docs(p6): career knowledge base content [P6-T1]`
   - DoD: structured KB data file(s) covering target portfolio projects.
-- [ ] **P6-T2** — Career KB ingestion + index (reuse embed/upload; new index name from config).
+- [x] **P6-T2** — Career KB ingestion + index (reuse embed/upload; new index name from config).
   - Commit: `feat(p6): career kb ingestion and index [P6-T2]`
   - DoD: KB searchable via AI Search; citations point to project entries.
-- [ ] **P6-T3** — Career KB retriever + register as "source 3" for portfolio instance.
+- [x] **P6-T3** — Career source registered. _(Option C: career is folded into the Foundry IQ KB as a third knowledge source — no separate retriever; registry returns {kb} for portfolio and the KB selects across docs/code/career.)_
   - Commit: `feat(p6): career kb retriever wired into source registry [P6-T3]`
   - DoD: registry returns career_kb (not issues) when instance=portfolio; zero code change elsewhere.
-- [ ] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).
+- [x] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).
   - Commit: `feat(p6): portfolio instance config [P6-T4]`
   - DoD: `REPO_EXPERT_INSTANCE=portfolio` ingests + serves portfolio data.
-- [ ] **P6-T5** — Router handles career questions ("which projects use Azure AI Search and Jorge's role?").
+- [x] **P6-T5** — Career questions handled. _(Portfolio routes to {kb}; the KB selects across docs/code/career by relevance + the career source description.)_
   - Commit: `feat(p6): router supports career-kb intent [P6-T5]`
   - DoD: career questions route to KB; code/doc questions still route to code/docs.
-- [ ] **P6-T6** — Guardrails: scope strictly to portfolio; decline off-topic cleanly.
+- [x] **P6-T6** — Guardrails: scope strictly to portfolio; decline off-topic cleanly. _(config `scope_prompt` appended to the generation system prompt; portfolio-only.)_
   - Commit: `feat(p6): portfolio scope guardrails [P6-T6]`
   - DoD: off-topic questions get a clean refusal; on-topic answered with citations.
-- [ ] **P6-T7** — Portfolio eval mini-set (reuse Phase 5 harness).
+- [x] **P6-T7** — Portfolio eval mini-set (reuse Phase 5 harness). _(10 questions; routing 1.0, hit@6 1.0, faithfulness 1.0.)_
   - Commit: `test(p6): portfolio eval q/a set [P6-T7]`
   - DoD: eval runs for portfolio instance; results recorded.
 

@@ -26,7 +26,7 @@ to undo once 8 phases sit on top. Get the seams right first.
 - [x] **P0-T3** — Define package layout under `src/repo_expert/` (`config/`, `ingestion/`, `retrieval/`, `agent/`, `api/`, `eval/`).
   - Commit: `chore(p0): create src/repo_expert package skeleton [P0-T3]`
   - DoD: importable package; empty `__init__.py` per module; `uv run python -c "import repo_expert"` works.
-- [ ] **P0-T4** — Settings loader (pydantic-settings) reading `.env`; fail-fast on missing required keys.
+- [x] **P0-T4** — Settings loader (pydantic-settings) reading `.env`; fail-fast on missing required keys.
   - Commit: `feat(p0): env-backed settings loader [P0-T4]`
   - DoD: loads Azure/GitHub keys from `.env`; clear error naming the missing var.
 - [ ] **P0-T5** — Typed **instance config** model + two configs: `public` (FastAPI target) and `portfolio` (stub).

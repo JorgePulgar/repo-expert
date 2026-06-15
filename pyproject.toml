@@ -7,7 +7,9 @@ authors = [
     { name = "Jorge Pulgar", email = "jpulgar111@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pydantic-settings>=2.14.1",
+]
 
 [project.scripts]
 repo-expert = "repo_expert:main"

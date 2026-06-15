@@ -60,13 +60,18 @@ def chunk_markdown_file(
     body: list[str] = []
     in_fence = False
     idx = 0
+    seen_anchors: dict[str, int] = {}  # de-dup repeated heading slugs per file
 
     def flush() -> None:
         nonlocal idx
         text = "\n".join(body).strip()
         if not text and not cur_title:
             return
-        anchor = _section_anchor(cur_path, cur_title, idx)
+        base = _section_anchor(cur_path, cur_title, idx)
+        # GitHub-style disambiguation: first "slug", then "slug-1", "slug-2", ...
+        count = seen_anchors.get(base, 0)
+        anchor = base if count == 0 else f"{base}-{count}"
+        seen_anchors[base] = count + 1
         content = (f"{cur_title}\n\n{text}" if cur_title else text).strip()
         chunks.append(
             Chunk(

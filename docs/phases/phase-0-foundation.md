@@ -29,7 +29,7 @@ to undo once 8 phases sit on top. Get the seams right first.
 - [x] **P0-T4** — Settings loader (pydantic-settings) reading `.env`; fail-fast on missing required keys.
   - Commit: `feat(p0): env-backed settings loader [P0-T4]`
   - DoD: loads Azure/GitHub keys from `.env`; clear error naming the missing var.
-- [ ] **P0-T5** — Typed **instance config** model + two configs: `public` (FastAPI target) and `portfolio` (stub).
+- [x] **P0-T5** — Typed **instance config** model + two configs: `public` (FastAPI target) and `portfolio` (stub).
   - Commit: `feat(p0): instance config model with public/portfolio selection [P0-T5]`
   - DoD: `REPO_EXPERT_INSTANCE` selects config; config carries target repo, index names, and active "source 3" (issues vs career_kb); selectable without code change.
 - [ ] **P0-T6** — Dev tooling: ruff (lint+format), pytest, pre-commit hook, `make`/`uv` task shortcuts.

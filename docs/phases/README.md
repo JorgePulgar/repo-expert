@@ -7,7 +7,7 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 
 | #  | Phase                          | Branch                          | Status | File |
 |----|--------------------------------|---------------------------------|--------|------|
-| 0  | Repo & Foundation              | `feature/phase-0-foundation`    | 🟡     | [phase-0-foundation.md](phase-0-foundation.md) |
+| 0  | Repo & Foundation              | `feature/phase-0-foundation`    | ✅     | [phase-0-foundation.md](phase-0-foundation.md) |
 | 1  | Config & Ingestion             | `feature/phase-1-ingestion`     | ⬜     | [phase-1-ingestion.md](phase-1-ingestion.md) |
 | 2  | Retrieval Layer                | `feature/phase-2-retrieval`     | ⬜     | [phase-2-retrieval.md](phase-2-retrieval.md) |
 | 3  | LangGraph Agent                | `feature/phase-3-agent`         | ⬜     | [phase-3-agent.md](phase-3-agent.md) |

@@ -38,7 +38,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T2** — Repo fetcher: clone/pull target repo to local `data/`.
   - Commit: `feat(p1): repo fetcher for target repo [P1-T2]`
   - DoD: given config, repo content present locally; idempotent re-run.
-- [ ] **P1-T3** — Markdown chunker (split by heading hierarchy; keep section path + source URL).
+- [x] **P1-T3** — Markdown chunker (split by heading hierarchy; keep section path + source URL).
   - Commit: `feat(p1): markdown chunker by heading [P1-T3]`
   - DoD: README + docs/ chunked; each chunk has title, section path, file path, repo-relative link.
 - [ ] **P1-T4** — Code-aware chunker (AST/symbol units: function/class with file + line span).

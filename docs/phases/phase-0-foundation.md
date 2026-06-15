@@ -23,7 +23,7 @@ to undo once 8 phases sit on top. Get the seams right first.
 - [x] **P0-T2** — Initialize uv project (`pyproject.toml`, Python 3.12, `uv.lock`).
   - Commit: `chore(p0): scaffold uv project with python 3.12 [P0-T2]`
   - DoD: `uv run python --version` prints 3.12.x; `uv.lock` committed.
-- [ ] **P0-T3** — Define package layout under `src/repo_expert/` (`config/`, `ingestion/`, `retrieval/`, `agent/`, `api/`, `eval/`).
+- [x] **P0-T3** — Define package layout under `src/repo_expert/` (`config/`, `ingestion/`, `retrieval/`, `agent/`, `api/`, `eval/`).
   - Commit: `chore(p0): create src/repo_expert package skeleton [P0-T3]`
   - DoD: importable package; empty `__init__.py` per module; `uv run python -c "import repo_expert"` works.
 - [ ] **P0-T4** — Settings loader (pydantic-settings) reading `.env`; fail-fast on missing required keys.

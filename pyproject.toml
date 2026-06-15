@@ -1,0 +1,17 @@
+[project]
+name = "repo-expert"
+version = "0.1.0"
+description = "Agentic RAG that answers questions about any GitHub repo (Azure AI Search + LangGraph)"
+readme = "README.md"
+authors = [
+    { name = "Jorge Pulgar", email = "jpulgar111@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+repo-expert = "repo_expert:main"
+
+[build-system]
+requires = ["uv_build>=0.11.15,<0.12.0"]
+build-backend = "uv_build"

@@ -1,6 +1,6 @@
 # Phase 4 — FastAPI Backend
 
-**Branch:** `feature/phase-4-api` · **Status:** ⬜ not started
+**Branch:** `feature/phase-4-api` · **Status:** 🟡 in progress
 
 ## Context
 Expose the agent over HTTP. Thin FastAPI layer over the Phase 3 `ask()`: request
@@ -15,7 +15,7 @@ Azure deployment (Phase 7) and the optional frontend (Phase 8).
 - Phase 3 complete (`ask()` works).
 
 ## Tasks
-- [ ] **P4-T1** — FastAPI app factory + settings/instance wired at startup.
+- [x] **P4-T1** — FastAPI app factory + settings/instance wired at startup.
   - Commit: `feat(p4): fastapi app factory [P4-T1]`
   - DoD: app boots; active instance logged on startup.
 - [ ] **P4-T2** — `GET /health` (liveness + which instance/indexes active).

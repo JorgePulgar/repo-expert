@@ -50,7 +50,7 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T6** — Define AI Search index schemas (docs index + code index): vector + keyword fields, semantic config.
   - Commit: `feat(p1): ai search index schemas (docs, code) [P1-T6]`
   - DoD: indexes created with the fields Foundry IQ needs to reference them as knowledge sources.
-- [ ] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.
+- [x] **P1-T7** — Uploader: push chunks+vectors to the indexes; upsert by stable id.
   - Commit: `feat(p1): index uploader with upsert [P1-T7]`
   - DoD: re-running updates rather than duplicates; counts logged.
 - [ ] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.

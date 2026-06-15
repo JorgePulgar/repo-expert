@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from langgraph.graph import END, START, StateGraph
 
-from repo_expert.agent.llm import chat_json
+from repo_expert.agent.llm import chat, chat_json
 from repo_expert.agent.state import AgentState
 from repo_expert.config.instance import get_instance_config
+from repo_expert.retrieval.models import RetrievalResult
 from repo_expert.retrieval.registry import available_sources, get_retrievers
 
 MAX_ATTEMPTS = 2
@@ -54,12 +55,55 @@ def retrieve_node(state: AgentState) -> AgentState:
     return {"results": results}
 
 
+_CONTEXT_LIMIT = 8
+_SNIPPET_CHARS = 900
+
+_GENERATE_SYSTEM = (
+    "You are a precise codebase assistant. Answer the question using ONLY the "
+    "numbered sources. Cite the sources you use inline as [n]. If the sources do "
+    "not contain the answer, say you don't know. Be concise and technical."
+)
+
+_GROUNDING_SYSTEM = (
+    "You verify whether an answer is fully supported by the provided sources. "
+    "Reply as JSON {\"grounded\": true|false, \"reason\": \"...\"}. Mark false if the "
+    "answer makes any claim not backed by the sources."
+)
+
+
+def _format_sources(results: list[RetrievalResult]) -> str:
+    lines = []
+    for i, r in enumerate(results[:_CONTEXT_LIMIT], start=1):
+        c = r.citation
+        loc = c.file_path or "/".join(c.section_path) or c.url
+        lines.append(f"[{i}] ({r.kind}) {c.title} — {loc}\n{r.content[:_SNIPPET_CHARS]}")
+    return "\n\n".join(lines)
+
+
 def generate_node(state: AgentState) -> AgentState:
-    return {"draft": "", "answer": "", "citations": []}
+    results = state.get("results", [])
+    if not results:
+        return {"draft": "", "answer": "I don't know — no relevant sources found.", "citations": []}
+    sources = _format_sources(results)
+    answer = chat(
+        _GENERATE_SYSTEM,
+        f"Sources:\n{sources}\n\nQuestion: {state['question']}",
+    )
+    citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
+    return {"draft": answer, "answer": answer, "citations": citations}
 
 
 def grounding_node(state: AgentState) -> AgentState:
-    return {"grounded": True}
+    draft = state.get("draft", "")
+    results = state.get("results", [])
+    if not draft or not results:
+        return {"grounded": False}
+    sources = _format_sources(results)
+    data = chat_json(
+        _GROUNDING_SYSTEM,
+        f"Sources:\n{sources}\n\nAnswer: {draft}",
+    )
+    return {"grounded": bool(data.get("grounded", False))}
 
 
 def fallback_node(state: AgentState) -> AgentState:

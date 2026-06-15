@@ -18,7 +18,7 @@ against regressions when tuning chunking/routing.
 - [x] **P5-T1** — Curated Q/A set for FastAPI instance (mix: code, docs, issues, multi-hop).
   - Commit: `test(p5): curated eval q/a set (public instance) [P5-T1]`
   - DoD: ≥ ~15 questions with expected sources/answers, stored as data file.
-- [ ] **P5-T2** — Retrieval-relevance metric (hit@k / expected-source match) harness.
+- [x] **P5-T2** — Retrieval-relevance metric (hit@k / expected-source match) harness.
   - Commit: `feat(p5): retrieval relevance eval harness [P5-T2]`
   - DoD: runs over Q/A set, reports per-source relevance scores.
 - [ ] **P5-T3** — Groundedness/faithfulness metric (LLM-as-judge against retrieved evidence).

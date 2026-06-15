@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from repo_expert.api.routes import router
 from repo_expert.config.instance import get_instance_config
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=_lifespan,
     )
+    app.include_router(router)
     return app
 
 

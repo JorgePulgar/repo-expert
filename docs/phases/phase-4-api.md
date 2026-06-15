@@ -18,7 +18,7 @@ Azure deployment (Phase 7) and the optional frontend (Phase 8).
 - [x] **P4-T1** — FastAPI app factory + settings/instance wired at startup.
   - Commit: `feat(p4): fastapi app factory [P4-T1]`
   - DoD: app boots; active instance logged on startup.
-- [ ] **P4-T2** — `GET /health` (liveness + which instance/indexes active).
+- [x] **P4-T2** — `GET /health` (liveness + which instance/indexes active).
   - Commit: `feat(p4): health endpoint [P4-T2]`
   - DoD: returns 200 with instance name and index status.
 - [ ] **P4-T3** — `POST /ask` (validated request → agent → structured answer+citations+route).

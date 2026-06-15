@@ -31,10 +31,10 @@ fix here, not a special case to hard-code.
 - [x] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).
   - Commit: `feat(p6): portfolio instance config [P6-T4]`
   - DoD: `REPO_EXPERT_INSTANCE=portfolio` ingests + serves portfolio data.
-- [ ] **P6-T5** — Router handles career questions ("which projects use Azure AI Search and Jorge's role?").
+- [x] **P6-T5** — Career questions handled. _(Portfolio routes to {kb}; the KB selects across docs/code/career by relevance + the career source description.)_
   - Commit: `feat(p6): router supports career-kb intent [P6-T5]`
   - DoD: career questions route to KB; code/doc questions still route to code/docs.
-- [ ] **P6-T6** — Guardrails: scope strictly to portfolio; decline off-topic cleanly.
+- [x] **P6-T6** — Guardrails: scope strictly to portfolio; decline off-topic cleanly. _(config `scope_prompt` appended to the generation system prompt; portfolio-only.)_
   - Commit: `feat(p6): portfolio scope guardrails [P6-T6]`
   - DoD: off-topic questions get a clean refusal; on-topic answered with citations.
 - [ ] **P6-T7** — Portfolio eval mini-set (reuse Phase 5 harness).

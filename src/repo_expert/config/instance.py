@@ -55,6 +55,10 @@ class InstanceConfig(BaseModel):
     # (portfolio instance only). Path is relative to the project root.
     career_doc: str | None = None
 
+    # Optional guardrail appended to the generation prompt to scope answers
+    # (e.g. portfolio instance declines off-topic questions).
+    scope_prompt: str | None = None
+
     @property
     def primary_repo(self) -> TargetRepo:
         return self.target_repos[0]
@@ -96,6 +100,12 @@ PORTFOLIO = InstanceConfig(
     source3=Source3Kind.CAREER_KB,
     source3_index="repo-expert-portfolio-career",
     career_doc="docs/jorge-pulgar-career-rag.md",
+    scope_prompt=(
+        "You ONLY answer questions about Jorge Pulgar — his background, skills, "
+        "projects, experience, and career — and the code/docs of his portfolio "
+        "repositories. If the question is unrelated to Jorge or his work, politely "
+        "decline in one sentence and state that you only cover Jorge's portfolio."
+    ),
     # All markdown docs + Python sources across the repos; skip vendored/build dirs.
     docs_globs=["**/*.md"],
     code_globs=["**/*.py"],

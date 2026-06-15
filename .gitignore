@@ -1,0 +1,30 @@
+# Secrets
+.env
+.env.*.local
+*.key
+
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Data / indexes / caches (local ingestion artifacts)
+data/
+.cache/
+*.sqlite
+
+# Node (frontend, Phase 8)
+node_modules/
+frontend/dist/
+
+# Editor / OS
+.idea/
+.DS_Store
+Thumbs.db
+*.log

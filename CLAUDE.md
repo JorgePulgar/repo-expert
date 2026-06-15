@@ -33,14 +33,22 @@ containing: the phase's context (what/why), its task list, and exit criteria.
 
 ---
 
-## Architecture (one-paragraph map)
+## Architecture (one-paragraph map) — option C (build-vs-buy)
 
 FastAPI backend exposes a `/ask` endpoint. A **LangGraph** agent orchestrates:
-router → retrieve (from selected source) → fallback → corrective/grounding → generate
-with citations. Retrieval is **Azure AI Search** (hybrid + semantic reranker). LLM is
-**Azure OpenAI**. Three heterogeneous knowledge sources (different *kinds*, not 3 vector
-indexes): (1) docs/markdown, (2) source code (code-aware chunking), (3) GitHub issues/PRs
-live via API — swapped for a **Career Knowledge Base** in the portfolio instance.
+router → retrieve → fallback → corrective/grounding → generate with citations.
+Retrieval backend is a **Foundry IQ knowledge base** (built on Azure AI Search agentic
+retrieval) over our own custom-chunked indexes; LangGraph wraps it and owns the headline
+reasoning (routing, fallback, self-correction). LLM is **Azure OpenAI**. Three
+heterogeneous knowledge sources (different *kinds*): (1) docs/markdown and (2) source code
+(code-aware chunking) — both indexed into the **KB**; (3) GitHub issues/PRs **live via API
+as a tool outside the KB** — swapped for a **Career Knowledge Base** (indexed into the KB)
+in the portfolio instance.
+
+**Build-vs-buy boundary:** *buy* = Foundry IQ/AI Search managed retrieval over indexed
+content; *build* = custom code-aware chunking + index, LangGraph orchestration + corrective
+grounding, and the live GitHub issues tool. Keep KB **reasoning effort low** so the agentic
+headline lives in our LangGraph, not the managed service.
 
 ## Config-driven targeting (core requirement)
 Switching instance = **changing config, not code**. A single config object selects the
@@ -51,9 +59,11 @@ Designed in Phase 1, honored everywhere after.
 
 ## Stack & tooling
 - **Python** 3.12, dependency manager **uv** (`uv add`, `uv run`, `uv.lock` committed).
-- Retrieval: Azure AI Search (hybrid search + semantic reranker).
-- Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG).
-- LLM: Azure OpenAI.
+- Retrieval backend: **Foundry IQ knowledge base** on Azure AI Search agentic retrieval
+  (hybrid + semantic rerank), over custom-built indexes. KB reasoning effort = low.
+- Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG wrapping the KB).
+- Live source: GitHub issues/PRs tool, outside the KB.
+- LLM: Azure OpenAI (embeddings + KB query planning + agent generation; gpt-4o/4.1/5 for KB planning).
 - Frontend (optional, Phase 8): React + TS. **Node deps via pnpm only**, never npm/npx.
 - Secrets in `.env` (gitignored). `.env.example` documents required keys. Never commit keys.
 

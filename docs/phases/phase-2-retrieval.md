@@ -3,40 +3,44 @@
 **Branch:** `feature/phase-2-retrieval` · **Status:** ⬜ not started
 
 ## Context
-A clean retrieval API the agent will call. Wraps Azure AI Search **hybrid search**
-(keyword + vector) with the **semantic reranker**, exposed per source (docs / code /
-issues). Plus the third source for the public instance: **GitHub issues/PRs live via API**
-(not indexed — queried at request time so "is this a known bug / still open?" is current).
+A clean retrieval API the LangGraph agent will call. Two kinds of retriever:
+1. **Knowledge base retriever** — wraps the Foundry IQ KB (`knowledge_base_retrieve`)
+   built in Phase 1. Covers the indexed sources (docs + code; career KB too, in the
+   portfolio instance). The KB does source selection + rerank internally.
+2. **Live GitHub issues/PRs retriever** — **outside** the KB (Foundry IQ has no GitHub
+   source). Custom GitHub API tool so "is this a known bug / still open?" is current.
+
+The **source registry** resolves what's available from instance config:
+- `public`: KB {docs, code} **+** live issues tool.
+- `portfolio`: KB {docs, code, career_kb}, **no** live tool (career is indexed into the KB).
 
 ## Why this phase exists
-Isolating retrieval behind a typed interface lets the LangGraph agent (Phase 3) stay
-source-agnostic and lets us swap source 3 (issues ↔ career KB) by config in Phase 6.
+Isolating retrieval behind one typed interface keeps the LangGraph agent (Phase 3)
+source-agnostic and makes the build-vs-buy seam explicit: managed KB for indexed
+content, custom tool for the live source.
 
 ## Prerequisites
-- Phase 1 complete (indexes populated).
-- `GITHUB_TOKEN` in `.env` for issues source.
+- Phase 1 complete (KB built + queryable).
+- `GITHUB_TOKEN` in `.env` for the issues tool.
 
 ## Tasks
-- [ ] **P2-T1** — Retrieval result model (text, score, source kind, citation: file/line or url/section).
+- [ ] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
   - Commit: `feat(p2): unified retrieval result model [P2-T1]`
-  - DoD: one dataclass/pydantic model all retrievers return; carries citation metadata.
-- [ ] **P2-T2** — Docs retriever: hybrid + semantic reranker over docs index.
-  - Commit: `feat(p2): docs retriever (hybrid + semantic) [P2-T2]`
-  - DoD: query returns ranked doc chunks with section citations.
-- [ ] **P2-T3** — Code retriever: hybrid + semantic reranker over code index.
-  - Commit: `feat(p2): code retriever (hybrid + semantic) [P2-T3]`
-  - DoD: query returns ranked code symbols with file/line citations.
-- [ ] **P2-T4** — GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
-  - Commit: `feat(p2): github issues/prs retriever [P2-T4]`
-  - DoD: returns matching issues/PRs with title, state, url; handles rate limits.
-- [ ] **P2-T5** — Source registry that resolves "active source 3" from config (issues vs career_kb stub).
-  - Commit: `feat(p2): source registry resolves active sources from config [P2-T5]`
-  - DoD: agent can ask registry for available retrievers without knowing instance.
-- [ ] **P2-T6** — Retrieval tests against live indexes (small, marked integration).
-  - Commit: `test(p2): retrieval integration tests [P2-T6]`
-  - DoD: known query returns expected top chunk per source.
+  - DoD: one model returned by both retrievers; carries citation metadata.
+- [ ] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
+  - Commit: `feat(p2): foundry iq knowledge base retriever [P2-T2]`
+  - DoD: a query returns ranked KB results with citations; reasoning effort = low (planning stays in LangGraph).
+- [ ] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
+  - Commit: `feat(p2): github issues/prs live retriever [P2-T3]`
+  - DoD: returns matching issues/PRs (title, state, url); handles rate limits; lives outside the KB.
+- [ ] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
+  - Commit: `feat(p2): source registry resolves retrievers from config [P2-T4]`
+  - DoD: registry returns {KB, issues} for `public` and {KB} for `portfolio`, no code change.
+- [ ] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.
+  - Commit: `test(p2): retrieval integration tests [P2-T5]`
+  - DoD: known query returns expected top result from KB and from the issues tool.
 
 ## Exit criteria
-- Three retrievers callable through one interface; citations populated.
-- Source registry returns correct set for `public` instance.
+- KB retriever + live issues retriever callable through one interface; citations populated.
+- Source registry returns the correct set per instance from config alone.
 - Update master index; open Phase 3.

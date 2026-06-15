@@ -1,0 +1,114 @@
+[
+  {
+    "id": "code-depends",
+    "question": "How is the Depends dependency implemented in the source code?",
+    "expected_sources": ["kb"],
+    "expected_kind": "code",
+    "must_include": ["fastapi/param_functions.py", "fastapi/params.py", "depends"]
+  },
+  {
+    "id": "code-apirouter",
+    "question": "How is the APIRouter class implemented?",
+    "expected_sources": ["kb"],
+    "expected_kind": "code",
+    "must_include": ["fastapi/routing.py", "apirouter"]
+  },
+  {
+    "id": "code-query-fn",
+    "question": "How is the Query parameter function defined in code?",
+    "expected_sources": ["kb"],
+    "expected_kind": "code",
+    "must_include": ["fastapi/param_functions.py", "query"]
+  },
+  {
+    "id": "code-fastapi-app",
+    "question": "Where is the FastAPI application class defined?",
+    "expected_sources": ["kb"],
+    "expected_kind": "code",
+    "must_include": ["fastapi/applications.py", "fastapi"]
+  },
+  {
+    "id": "code-jsonable-encoder",
+    "question": "How does jsonable_encoder work in the code?",
+    "expected_sources": ["kb"],
+    "expected_kind": "code",
+    "must_include": ["fastapi/encoders.py", "jsonable_encoder"]
+  },
+  {
+    "id": "docs-query-params",
+    "question": "How do I declare query parameters in FastAPI?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["query-param"]
+  },
+  {
+    "id": "docs-path-params",
+    "question": "How do I use path parameters?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["path-param"]
+  },
+  {
+    "id": "docs-request-body",
+    "question": "How do I receive a request body with a Pydantic model?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["body"]
+  },
+  {
+    "id": "docs-dependencies",
+    "question": "What is dependency injection in FastAPI and how do I use it?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["dependencies"]
+  },
+  {
+    "id": "docs-security",
+    "question": "How do I add OAuth2 authentication with a password flow?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["security"]
+  },
+  {
+    "id": "docs-background-tasks",
+    "question": "How do I run work in the background after returning a response?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["background-tasks"]
+  },
+  {
+    "id": "docs-custom-response",
+    "question": "How do I return a custom or streaming response?",
+    "expected_sources": ["kb"],
+    "expected_kind": "docs",
+    "must_include": ["response"]
+  },
+  {
+    "id": "issue-backgroundtasks",
+    "question": "Is there a known issue about BackgroundTasks not running or blocking?",
+    "expected_sources": ["issues"],
+    "expected_kind": "issue",
+    "must_include": ["github.com/fastapi/fastapi"]
+  },
+  {
+    "id": "issue-dependency-overrides",
+    "question": "Are there reported bugs about dependency_overrides?",
+    "expected_sources": ["issues"],
+    "expected_kind": "issue",
+    "must_include": ["github.com/fastapi/fastapi"]
+  },
+  {
+    "id": "issue-websocket",
+    "question": "Is there a known problem with WebSocket disconnect handling?",
+    "expected_sources": ["issues"],
+    "expected_kind": "issue",
+    "must_include": ["github.com/fastapi/fastapi"]
+  },
+  {
+    "id": "multi-middleware",
+    "question": "How is middleware added in FastAPI and are there known issues with it?",
+    "expected_sources": ["kb", "issues"],
+    "expected_kind": null,
+    "must_include": ["middleware"]
+  }
+]

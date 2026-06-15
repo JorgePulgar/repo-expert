@@ -1,6 +1,6 @@
 # Phase 5 — Evaluation
 
-**Branch:** `feature/phase-5-eval` · **Status:** ⬜ not started
+**Branch:** `feature/phase-5-eval` · **Status:** 🟡 in progress
 
 ## Context
 Prove it works. Build a small curated Q/A set for the public instance and measure
@@ -15,7 +15,7 @@ against regressions when tuning chunking/routing.
 - Phase 4 complete (API/agent callable).
 
 ## Tasks
-- [ ] **P5-T1** — Curated Q/A set for FastAPI instance (mix: code, docs, issues, multi-hop).
+- [x] **P5-T1** — Curated Q/A set for FastAPI instance (mix: code, docs, issues, multi-hop).
   - Commit: `test(p5): curated eval q/a set (public instance) [P5-T1]`
   - DoD: ≥ ~15 questions with expected sources/answers, stored as data file.
 - [ ] **P5-T2** — Retrieval-relevance metric (hit@k / expected-source match) harness.

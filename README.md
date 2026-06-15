@@ -63,19 +63,20 @@ two things that matter for agentic RAG. Full report:
 | Metric | Value |
 | --- | --- |
 | Routing accuracy | **1.00** |
-| Relevance hit@6 | **0.69** (docs 1.0 · code 0.6 · issues 0.0 · mixed 1.0) |
-| Faithfulness rate (judge) | **0.88** |
-| Mean faithfulness score | **0.95** |
-| Agent self-grounded rate | **0.81–0.88** |
+| Relevance hit@6 | **0.88** (docs 1.0 · code 0.6 · issues 1.0 · mixed 1.0) |
+| Faithfulness rate (judge) | **0.75** |
+| Mean faithfulness score | **0.89** |
+| Agent self-grounded rate | **0.88** |
 
 **Analysis / limitations**
-- **Docs retrieval is strong (1.0); groundedness is high (0.95 mean)** — the corrective
-  loop catches weak drafts (e.g. code/issue questions trigger fallback to a second
-  source before answering).
-- **Issues relevance is 0.0**: full natural-language questions are passed verbatim to the
-  GitHub Search API, which expects keywords and returns nothing. Despite this, those
-  questions still get *faithful* answers because the agent falls back to the KB. Planned
-  fix: an LLM **query-rewrite** step for the issues tool.
+- **Docs and issues retrieval are strong (1.0)**; overall hit@6 is 0.88.
+- **Issues retrieval uses an LLM query-rewrite**: natural-language questions are first
+  condensed to keywords, because the GitHub Search API ANDs terms and returns nothing for
+  prose. This lifted issue relevance from 0.0 → 1.0.
 - **Code relevance 0.6**: exact symbol files aren't always in the top-k; symbol-level
   chunking + reranking handles most but not all "where is X defined" lookups.
+- **Groundedness ≈ 0.89 mean**: the corrective loop catches weak drafts before answering.
+  Faithfulness rate is lower than the earlier 0.0-issues baseline precisely *because* the
+  agent now attempts substantive issue answers instead of falling back to the KB — a
+  deliberate trade of caution for coverage.
 - Groundedness uses an LLM judge (gpt-4o), so scores carry small run-to-run variance.

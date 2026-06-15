@@ -1,15 +1,15 @@
 {
   "instance": "public",
   "repo": "fastapi/fastapi",
-  "generated_at": "2026-06-15T12:15:20+00:00",
+  "generated_at": "2026-06-15T17:14:40+00:00",
   "relevance": {
     "n": 16,
     "routing_accuracy": 1.0,
-    "relevance_hit_at_k": 0.688,
+    "relevance_hit_at_k": 0.875,
     "relevance_by_kind": {
       "code": 0.6,
       "docs": 1.0,
-      "issue": 0.0,
+      "issue": 1.0,
       "mixed": 1.0
     },
     "top_k": 6,
@@ -155,7 +155,7 @@
           "issues"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "issue-dependency-overrides",
@@ -166,7 +166,7 @@
           "issues"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "issue-websocket",
@@ -177,7 +177,7 @@
           "issues"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "multi-middleware",
@@ -196,8 +196,8 @@
   },
   "groundedness": {
     "n": 16,
-    "faithfulness_rate": 0.875,
-    "mean_faithfulness_score": 0.938,
+    "faithfulness_rate": 0.75,
+    "mean_faithfulness_score": 0.887,
     "self_grounded_rate": 0.875,
     "items": [
       {
@@ -211,8 +211,8 @@
         "id": "code-apirouter",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": true,
-        "fallback_used": false
+        "self_grounded": false,
+        "fallback_used": true
       },
       {
         "id": "code-query-fn",
@@ -286,10 +286,10 @@
       },
       {
         "id": "issue-backgroundtasks",
-        "faithful": true,
-        "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "faithful": false,
+        "score": 0.7,
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "issue-dependency-overrides",
@@ -300,17 +300,17 @@
       },
       {
         "id": "issue-websocket",
-        "faithful": true,
-        "score": 1.0,
+        "faithful": false,
+        "score": 0.5,
         "self_grounded": true,
-        "fallback_used": true
+        "fallback_used": false
       },
       {
         "id": "multi-middleware",
         "faithful": false,
         "score": 0.7,
         "self_grounded": true,
-        "fallback_used": false
+        "fallback_used": true
       }
     ]
   }

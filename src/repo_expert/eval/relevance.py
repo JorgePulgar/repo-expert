@@ -8,11 +8,15 @@ For each question we measure two things independently:
 
 from __future__ import annotations
 
+import logging
+
 from repo_expert.agent.graph import router_node
 from repo_expert.config.instance import get_instance_config
 from repo_expert.eval.dataset import QAItem, load_qa
 from repo_expert.retrieval.models import RetrievalResult
 from repo_expert.retrieval.registry import get_retrievers
+
+logger = logging.getLogger(__name__)
 
 
 def _citation_text(r: RetrievalResult) -> str:
@@ -39,15 +43,19 @@ def run_relevance(instance: str | None = None, top: int = 6) -> dict:
     items = []
     routing_hits = relevance_hits = 0
     for item in qa:
-        predicted = router_node({"question": item.question}).get("route", [])
-        routed_ok = bool(set(predicted) & set(item.expected_sources))
+        try:
+            predicted = router_node({"question": item.question}).get("route", [])
+            routed_ok = bool(set(predicted) & set(item.expected_sources))
 
-        results: list[RetrievalResult] = []
-        for src in item.expected_sources:
-            retriever = retrievers.get(src)
-            if retriever:
-                results.extend(retriever(item.question, top=top))
-        relevant = _is_relevant(item, results)
+            results: list[RetrievalResult] = []
+            for src in item.expected_sources:
+                retriever = retrievers.get(src)
+                if retriever:
+                    results.extend(retriever(item.question, top=top))
+            relevant = _is_relevant(item, results)
+        except Exception as exc:  # noqa: BLE001 - one transient failure must not abort the run
+            logger.warning("Relevance eval failed for %s: %s", item.id, exc)
+            predicted, routed_ok, relevant = [], False, False
 
         routing_hits += routed_ok
         relevance_hits += relevant

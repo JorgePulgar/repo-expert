@@ -33,7 +33,7 @@ content, custom tool for the live source.
 - [x] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
   - Commit: `feat(p2): github issues/prs live retriever [P2-T3]`
   - DoD: returns matching issues/PRs (title, state, url); handles rate limits; lives outside the KB.
-- [ ] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
+- [x] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).
   - Commit: `feat(p2): source registry resolves retrievers from config [P2-T4]`
   - DoD: registry returns {KB, issues} for `public` and {KB} for `portfolio`, no code change.
 - [ ] **P2-T5** — Retrieval tests (small, marked integration): KB query + issues query.

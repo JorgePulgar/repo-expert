@@ -9,7 +9,7 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 |----|--------------------------------|---------------------------------|--------|------|
 | 0  | Repo & Foundation              | `feature/phase-0-foundation`    | ✅     | [phase-0-foundation.md](phase-0-foundation.md) |
 | 1  | Ingestion & Foundry IQ KB      | `feature/phase-1-ingestion`     | ✅     | [phase-1-ingestion.md](phase-1-ingestion.md) |
-| 2  | Retrieval Layer                | `feature/phase-2-retrieval`     | ⬜     | [phase-2-retrieval.md](phase-2-retrieval.md) |
+| 2  | Retrieval Layer                | `feature/phase-2-retrieval`     | 🟡     | [phase-2-retrieval.md](phase-2-retrieval.md) |
 | 3  | LangGraph Agent                | `feature/phase-3-agent`         | ⬜     | [phase-3-agent.md](phase-3-agent.md) |
 | 4  | FastAPI Backend                | `feature/phase-4-api`           | ⬜     | [phase-4-api.md](phase-4-api.md) |
 | 5  | Evaluation                     | `feature/phase-5-eval`          | ⬜     | [phase-5-eval.md](phase-5-eval.md) |

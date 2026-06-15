@@ -1,6 +1,6 @@
 # Phase 2 — Retrieval Layer
 
-**Branch:** `feature/phase-2-retrieval` · **Status:** ⬜ not started
+**Branch:** `feature/phase-2-retrieval` · **Status:** 🟡 in progress
 
 ## Context
 A clean retrieval API the LangGraph agent will call. Two kinds of retriever:
@@ -24,7 +24,7 @@ content, custom tool for the live source.
 - `GITHUB_TOKEN` in `.env` for the issues tool.
 
 ## Tasks
-- [ ] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
+- [x] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
   - Commit: `feat(p2): unified retrieval result model [P2-T1]`
   - DoD: one model returned by both retrievers; carries citation metadata.
 - [ ] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.

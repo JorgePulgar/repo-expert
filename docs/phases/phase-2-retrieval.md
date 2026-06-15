@@ -30,7 +30,7 @@ content, custom tool for the live source.
 - [x] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
   - Commit: `feat(p2): foundry iq knowledge base retriever [P2-T2]`
   - DoD: a query returns ranked KB results with citations; reasoning effort = low (planning stays in LangGraph).
-- [ ] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
+- [x] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).
   - Commit: `feat(p2): github issues/prs live retriever [P2-T3]`
   - DoD: returns matching issues/PRs (title, state, url); handles rate limits; lives outside the KB.
 - [ ] **P2-T4** — Source registry: resolve active retrievers from instance config (KB always; live issues only when source3=issues).

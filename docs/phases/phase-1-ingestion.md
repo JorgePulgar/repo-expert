@@ -56,9 +56,9 @@ into Foundry IQ — proving the build-vs-buy judgment.
 - [x] **P1-T8** — Create **knowledge sources** ("existing search index" type) for docs + code, with descriptions for source selection.
   - Commit: `feat(p1): foundry iq knowledge sources for docs and code [P1-T8]`
   - DoD: two knowledge sources exist, each with a description guiding the KB router (e.g. "code index for how-is-X-implemented").
-- [ ] **P1-T9** — Create the **Foundry IQ knowledge base** referencing both sources; attach query-planning LLM; set reasoning effort = low.
+- [x] **P1-T9** — Create the **Foundry IQ knowledge base** referencing both sources (basic GA KB; no LLM attached — LangGraph owns reasoning. LLM query planning + reasoning-effort tuning are preview-only in GA SDK 12.0.0).
   - Commit: `feat(p1): foundry iq knowledge base over docs+code [P1-T9]`
-  - DoD: KB exists; `knowledge_base_retrieve` returns grounded results with citations for a test query.
+  - DoD: KB exists; `knowledge_base_retrieve` returns grounded results with citations for a test query. (Note: references expose `title` + `docKey`=chunk id; resolve full citation via index lookup in Phase 2 — `sourceData` returns null in GA.)
 - [ ] **P1-T10** — `ingest` CLI (`uv run repo-expert ingest`): fetch → chunk → embed → upload → (re)build KB, driven by active config.
   - Commit: `feat(p1): ingest cli entrypoint [P1-T10]`
   - DoD: one command takes the active instance from clean state to a queryable KB.

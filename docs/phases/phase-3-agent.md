@@ -1,6 +1,6 @@
 # Phase 3 — LangGraph Agent
 
-**Branch:** `feature/phase-3-agent` · **Status:** ⬜ not started
+**Branch:** `feature/phase-3-agent` · **Status:** ✅ done
 
 ## Context
 The CV-relevant core and the **build** half of build-vs-buy. A **LangGraph** agent
@@ -27,28 +27,28 @@ AND "integrated Foundry IQ agentic retrieval" AND "made the build-vs-buy call".
 - Azure OpenAI chat deployment for the agent's generation/grounding.
 
 ## Tasks
-- [ ] **P3-T1** — Graph state + skeleton (nodes/edges wired, no logic).
+- [x] **P3-T1** — Graph state + skeleton (nodes/edges wired, no logic).
   - Commit: `feat(p3): langgraph state and skeleton graph [P3-T1]`
   - DoD: graph compiles; state carries query, route, retrieved results, draft, citations.
-- [ ] **P3-T2** — Router node: classify intent → KB / live-issues / both.
+- [x] **P3-T2** — Router node: classify intent → KB / live-issues / both.
   - Commit: `feat(p3): router node (kb vs live issues) [P3-T2]`
   - DoD: "how is X implemented?" → KB; "is this a known bug / still open?" → issues; ambiguous → both.
-- [ ] **P3-T3** — Retrieve node: call selected retriever(s) via the registry.
+- [x] **P3-T3** — Retrieve node: call selected retriever(s) via the registry.
   - Commit: `feat(p3): retrieve node via source registry [P3-T3]`
   - DoD: populates state with results + citations from KB and/or the live tool.
-- [ ] **P3-T4** — Fallback logic: weak/empty KB → try issues (and vice versa); "is this broken?" → issues, then code if unresolved.
+- [x] **P3-T4** — Fallback logic: weak/empty KB → try issues (and vice versa); "is this broken?" → issues, then code if unresolved.
   - Commit: `feat(p3): fallback routing on weak/empty retrieval [P3-T4]`
   - DoD: low-confidence/empty retrieval triggers the secondary source; logged.
-- [ ] **P3-T5** — Corrective/grounding node: verify draft against retrieved evidence; re-retrieve or revise if unsupported.
+- [x] **P3-T5** — Corrective/grounding node: verify draft against retrieved evidence; re-retrieve or revise if unsupported.
   - Commit: `feat(p3): corrective grounding node [P3-T5]`
   - DoD: claims unsupported by retrieved text trigger revision/re-retrieval before responding.
-- [ ] **P3-T6** — Generate node: grounded answer with inline citations (file/line or doc section/url/issue).
+- [x] **P3-T6** — Generate node: grounded answer with inline citations (file/line or doc section/url/issue).
   - Commit: `feat(p3): grounded generation with citations [P3-T6]`
   - DoD: every answer cites sources; no evidence → honest "I don't know".
-- [ ] **P3-T7** — Agent entrypoint `ask(question) -> answer+citations+route` + graph diagram export.
+- [x] **P3-T7** — Agent entrypoint `ask(question) -> answer+citations+route` + graph diagram export.
   - Commit: `feat(p3): agent ask() entrypoint and graph export [P3-T7]`
   - DoD: callable function returns structured answer; mermaid/png of graph saved for docs.
-- [ ] **P3-T8** — Unit tests for router + grounding with fixtures.
+- [x] **P3-T8** — Unit tests for router + grounding with fixtures.
   - Commit: `test(p3): router and grounding unit tests [P3-T8]`
   - DoD: routing (KB vs issues) and grounding behavior asserted on representative questions.
 

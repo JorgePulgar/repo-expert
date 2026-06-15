@@ -27,7 +27,7 @@ content, custom tool for the live source.
 - [x] **P2-T1** — Unified retrieval result model (text, score, source kind, citation: file/line or url/section).
   - Commit: `feat(p2): unified retrieval result model [P2-T1]`
   - DoD: one model returned by both retrievers; carries citation metadata.
-- [ ] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
+- [x] **P2-T2** — KB retriever: call `knowledge_base_retrieve`; map KB references → unified results + citations.
   - Commit: `feat(p2): foundry iq knowledge base retriever [P2-T2]`
   - DoD: a query returns ranked KB results with citations; reasoning effort = low (planning stays in LangGraph).
 - [ ] **P2-T3** — Live GitHub issues/PRs retriever via API (state filter open/closed, search by terms).

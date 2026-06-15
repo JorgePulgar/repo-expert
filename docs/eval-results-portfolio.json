@@ -1,0 +1,205 @@
+{
+  "instance": "portfolio",
+  "repo": "JorgePulgar/ai-invoice-analyzer",
+  "generated_at": "2026-06-15T22:18:49+00:00",
+  "relevance": {
+    "n": 10,
+    "routing_accuracy": 1.0,
+    "relevance_hit_at_k": 1.0,
+    "relevance_by_kind": {
+      "career": 1.0,
+      "mixed": 1.0
+    },
+    "top_k": 6,
+    "items": [
+      {
+        "id": "career-licitai-role",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "career-azure-search-projects",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "career-certifications",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "career-datarmony",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "career-location",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "repo-rag-assistants",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "repo-interview-agent",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "repo-fraud-autoencoder",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "repo-clarity-bank",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      },
+      {
+        "id": "repo-invoice-analyzer",
+        "expected_sources": [
+          "kb"
+        ],
+        "predicted_route": [
+          "kb"
+        ],
+        "routing_ok": true,
+        "relevant": true
+      }
+    ]
+  },
+  "groundedness": {
+    "n": 10,
+    "faithfulness_rate": 1.0,
+    "mean_faithfulness_score": 1.0,
+    "self_grounded_rate": 0.0,
+    "items": [
+      {
+        "id": "career-licitai-role",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "career-azure-search-projects",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "career-certifications",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "career-datarmony",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "career-location",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "repo-rag-assistants",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "repo-interview-agent",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "repo-fraud-autoencoder",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "repo-clarity-bank",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      },
+      {
+        "id": "repo-invoice-analyzer",
+        "faithful": true,
+        "score": 1.0,
+        "self_grounded": false,
+        "fallback_used": true
+      }
+    ]
+  }
+}

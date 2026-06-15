@@ -1,6 +1,6 @@
 # Phase 6 — Portfolio Instance
 
-**Branch:** `feature/phase-6-portfolio` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-6-portfolio` · **Status:** ✅ done
 
 ## Context
 The recruiter demo: **same app, different data**. Prove the config-driven design by
@@ -37,7 +37,7 @@ fix here, not a special case to hard-code.
 - [x] **P6-T6** — Guardrails: scope strictly to portfolio; decline off-topic cleanly. _(config `scope_prompt` appended to the generation system prompt; portfolio-only.)_
   - Commit: `feat(p6): portfolio scope guardrails [P6-T6]`
   - DoD: off-topic questions get a clean refusal; on-topic answered with citations.
-- [ ] **P6-T7** — Portfolio eval mini-set (reuse Phase 5 harness).
+- [x] **P6-T7** — Portfolio eval mini-set (reuse Phase 5 harness). _(10 questions; routing 1.0, hit@6 1.0, faithfulness 1.0.)_
   - Commit: `test(p6): portfolio eval q/a set [P6-T7]`
   - DoD: eval runs for portfolio instance; results recorded.
 

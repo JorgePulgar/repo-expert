@@ -48,7 +48,10 @@ uv run repo-expert eval              # run the evaluation, write docs/eval-resul
 
 A curated set of **16 questions** (5 code, 7 docs, 3 issues, 1 multi-hop) measures the
 two things that matter for agentic RAG. Full report:
-[`docs/eval-results.md`](docs/eval-results.md) · regenerate with `uv run repo-expert eval`.
+[`docs/eval-results-public.md`](docs/eval-results-public.md) · regenerate with
+`uv run repo-expert eval`. The portfolio instance has its own set
+([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md),
+`uv run repo-expert --instance portfolio eval`).
 
 **Method**
 - *Retrieval relevance* — for each question: (a) **routing accuracy**, did the router
@@ -80,3 +83,8 @@ two things that matter for agentic RAG. Full report:
   agent now attempts substantive issue answers instead of falling back to the KB — a
   deliberate trade of caution for coverage.
 - Groundedness uses an LLM judge (gpt-4o), so scores carry small run-to-run variance.
+
+**Portfolio instance (n=10)** — career + portfolio-repo questions, career KB folded into
+the KB as a third knowledge source: **routing 1.0, relevance hit@6 1.0, faithfulness 1.0**
+([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Off-topic questions
+are declined by the config-driven scope guardrail.

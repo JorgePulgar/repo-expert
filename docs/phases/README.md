@@ -12,7 +12,7 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 | 2  | Retrieval Layer                | `feature/phase-2-retrieval`     | ✅     | [phase-2-retrieval.md](phase-2-retrieval.md) |
 | 3  | LangGraph Agent                | `feature/phase-3-agent`         | ✅     | [phase-3-agent.md](phase-3-agent.md) |
 | 4  | FastAPI Backend                | `feature/phase-4-api`           | ✅     | [phase-4-api.md](phase-4-api.md) |
-| 5  | Evaluation                     | `feature/phase-5-eval`          | 🟡     | [phase-5-eval.md](phase-5-eval.md) |
+| 5  | Evaluation                     | `feature/phase-5-eval`          | ✅     | [phase-5-eval.md](phase-5-eval.md) |
 | 6  | Portfolio Instance             | `feature/phase-6-portfolio`     | ⬜     | [phase-6-portfolio.md](phase-6-portfolio.md) |
 | 7  | Docs & Deploy                  | `feature/phase-7-docs-deploy`   | ⬜     | [phase-7-docs-deploy.md](phase-7-docs-deploy.md) |
 | 8  | Frontend (optional)            | `feature/phase-8-frontend`      | ⬜     | [phase-8-frontend.md](phase-8-frontend.md) |

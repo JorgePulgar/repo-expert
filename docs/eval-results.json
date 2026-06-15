@@ -1,7 +1,7 @@
 {
   "instance": "public",
   "repo": "fastapi/fastapi",
-  "generated_at": "2026-06-15T12:13:40+00:00",
+  "generated_at": "2026-06-15T12:15:20+00:00",
   "relevance": {
     "n": 16,
     "routing_accuracy": 1.0,
@@ -197,7 +197,7 @@
   "groundedness": {
     "n": 16,
     "faithfulness_rate": 0.875,
-    "mean_faithfulness_score": 0.95,
+    "mean_faithfulness_score": 0.938,
     "self_grounded_rate": 0.875,
     "items": [
       {
@@ -217,7 +217,7 @@
       {
         "id": "code-query-fn",
         "faithful": false,
-        "score": 0.5,
+        "score": 0.3,
         "self_grounded": true,
         "fallback_used": false
       },
@@ -310,7 +310,7 @@
         "faithful": false,
         "score": 0.7,
         "self_grounded": true,
-        "fallback_used": true
+        "fallback_used": false
       }
     ]
   }

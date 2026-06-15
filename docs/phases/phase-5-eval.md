@@ -1,6 +1,6 @@
 # Phase 5 — Evaluation
 
-**Branch:** `feature/phase-5-eval` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-5-eval` · **Status:** ✅ done
 
 ## Context
 Prove it works. Build a small curated Q/A set for the public instance and measure
@@ -27,7 +27,7 @@ against regressions when tuning chunking/routing.
 - [x] **P5-T4** — Eval runner CLI (`uv run repo-expert eval`) + results report (markdown/json).
   - Commit: `feat(p5): eval runner cli with report output [P5-T4]`
   - DoD: one command produces a results report committed under `docs/`.
-- [ ] **P5-T5** — Record baseline results + brief analysis in README/ARCHITECTURE.
+- [x] **P5-T5** — Record baseline results + brief analysis in README/ARCHITECTURE.
   - Commit: `docs(p5): document eval methodology and baseline results [P5-T5]`
   - DoD: numbers + method written up; limitations noted.
 

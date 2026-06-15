@@ -45,7 +45,7 @@ AND "integrated Foundry IQ agentic retrieval" AND "made the build-vs-buy call".
 - [x] **P3-T6** — Generate node: grounded answer with inline citations (file/line or doc section/url/issue).
   - Commit: `feat(p3): grounded generation with citations [P3-T6]`
   - DoD: every answer cites sources; no evidence → honest "I don't know".
-- [ ] **P3-T7** — Agent entrypoint `ask(question) -> answer+citations+route` + graph diagram export.
+- [x] **P3-T7** — Agent entrypoint `ask(question) -> answer+citations+route` + graph diagram export.
   - Commit: `feat(p3): agent ask() entrypoint and graph export [P3-T7]`
   - DoD: callable function returns structured answer; mermaid/png of graph saved for docs.
 - [ ] **P3-T8** — Unit tests for router + grounding with fixtures.

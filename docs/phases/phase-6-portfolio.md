@@ -1,6 +1,6 @@
 # Phase 6 — Portfolio Instance
 
-**Branch:** `feature/phase-6-portfolio` · **Status:** ⬜ not started
+**Branch:** `feature/phase-6-portfolio` · **Status:** 🟡 in progress
 
 ## Context
 The recruiter demo: **same app, different data**. Prove the config-driven design by
@@ -28,7 +28,7 @@ fix here, not a special case to hard-code.
 - [ ] **P6-T3** — Career KB retriever + register as "source 3" for portfolio instance.
   - Commit: `feat(p6): career kb retriever wired into source registry [P6-T3]`
   - DoD: registry returns career_kb (not issues) when instance=portfolio; zero code change elsewhere.
-- [ ] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).
+- [x] **P6-T4** — `portfolio` instance config (target repos, index names, source 3 = career_kb).
   - Commit: `feat(p6): portfolio instance config [P6-T4]`
   - DoD: `REPO_EXPERT_INSTANCE=portfolio` ingests + serves portfolio data.
 - [ ] **P6-T5** — Router handles career questions ("which projects use Azure AI Search and Jorge's role?").

@@ -1,6 +1,6 @@
 # Phase 3 — LangGraph Agent
 
-**Branch:** `feature/phase-3-agent` · **Status:** ⬜ not started
+**Branch:** `feature/phase-3-agent` · **Status:** 🟡 in progress
 
 ## Context
 The CV-relevant core and the **build** half of build-vs-buy. A **LangGraph** agent
@@ -27,7 +27,7 @@ AND "integrated Foundry IQ agentic retrieval" AND "made the build-vs-buy call".
 - Azure OpenAI chat deployment for the agent's generation/grounding.
 
 ## Tasks
-- [ ] **P3-T1** — Graph state + skeleton (nodes/edges wired, no logic).
+- [x] **P3-T1** — Graph state + skeleton (nodes/edges wired, no logic).
   - Commit: `feat(p3): langgraph state and skeleton graph [P3-T1]`
   - DoD: graph compiles; state carries query, route, retrieved results, draft, citations.
 - [ ] **P3-T2** — Router node: classify intent → KB / live-issues / both.

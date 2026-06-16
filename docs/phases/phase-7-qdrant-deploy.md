@@ -37,18 +37,17 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
 - A Qdrant Cloud free-tier cluster provisioned (0.5 vCPU / 1 GB RAM / 4 GB disk — verified
   ample for the ~3k-chunk corpus).
 
-## Open decisions (resolve before/within the phase)
+## Decisions (locked 2026-06-16)
 
-1. **Embedding model (Qdrant free inference):** `mxbai-embed-large-v1` (1024-dim,
-   MTEB 64.68, matches OpenAI 3-large) **if free on the free tier**, else
-   `all-MiniLM-L6-v2` (384-dim, lighter, still fine for this corpus). Verify the "Cost:
-   Free" label in the Qdrant Console → Inference tab.
-2. **LLM provider/model for generation + routing + grounding:** `gpt-4o-mini` (Azure
-   OpenAI — least change, keeps current client) vs Claude Haiku (new key). Embeddings move
-   to Qdrant either way; Azure OpenAI may be dropped entirely if Claude is chosen.
-3. **Cold-start handling:** accept ~30–60s wake-up on the free host, or add a free
-   uptime-cron ping to keep warm. (Frontend should show a "waking up" state regardless —
-   handled in Phase 8.)
+1. **Embedding model:** `mxbai-embed-large-v1` (1024-dim, MTEB 64.68, matches OpenAI
+   3-large) via Qdrant Cloud free inference. **Gate:** confirm the "Cost: Free" label in
+   the Qdrant Console → Inference tab during P7-T2; if it is not free on the free tier,
+   fall back to `all-MiniLM-L6-v2` (384-dim).
+2. **LLM (generation + routing + grounding):** `gpt-4o-mini` on **Azure OpenAI** — keeps
+   the current client, least change. Azure OpenAI is retained for chat; embeddings move to
+   Qdrant.
+3. **Cold start:** accept the free-host ~30–60s wake-up. The Phase 8 widget shows a
+   "waking up" state; no keep-warm cron for now (can add later if it annoys).
 
 ## Tasks
 

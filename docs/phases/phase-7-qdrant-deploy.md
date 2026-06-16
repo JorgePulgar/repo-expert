@@ -1,39 +1,107 @@
-# Phase 7 — Docs & Deploy
+# Phase 7 — Migrate retrieval to Qdrant & deploy cheaply
 
-**Branch:** `feature/phase-7-docs-deploy` · **Status:** ⬜ not started
+**Branch:** `feature/phase-7-docs-deploy` · **Status:** 🟡 in progress
 
-## Context
-Ship it and document it. Produce the bilingual README + ARCHITECTURE, then deploy to
-Azure so it's testable in the portal/playground per the class requirement.
+## Context — strategic pivot
+
+The project graduates from "class deliverable" to a **production chat on Jorge's personal
+brand website** (Hostinger). The class-driven Azure stack is too expensive for a
+low-traffic personal site: **Azure AI Search Basic ≈ $75/month flat**, regardless of
+traffic. This phase swaps the *retrieval backend* to **Qdrant Cloud free tier** (vector
+store + free inference embeddings) and the generation model to a cheap one, then deploys
+the backend to a **free host** reachable with the dev machine off.
+
+Target recurring cost: **~$0–1/month** (Qdrant free, free embeddings, cheap LLM, free
+host) vs ~$75+/month on Azure.
+
+**What stays (the design payoff):** LangGraph agent (router → retrieve → generate →
+grounding → fallback), FastAPI API, instance config, eval harness, the live GitHub issues
+tool. Retrieval is already behind `retrieve_kb` + the registry, so the migration is
+contained to **ingestion upload + the `kb` retriever**. Both instances (public/FastAPI and
+portfolio) keep working; only their KB backend changes from Azure AI Search to Qdrant.
+
+> Earlier P7 tasks (ARCHITECTURE.md, README.md, README.es.md, Dockerfile, deploy guide)
+> were written against the Azure stack. They remain valid until the migration lands, then
+> are refreshed in **P7-T7**. The Azure deployment path (`docs/deploy.md`) is superseded by
+> the HF Spaces path; keep it as an alternative or trim it in P7-T7.
 
 ## Why this phase exists
-The deliverable is graded on documentation and deployability, not just code. This phase
-makes the project legible to graders and recruiters and reachable over the internet.
+
+A personal-brand chat must be cheap, always-reachable, and still read as a real,
+modern RAG on a CV. Qdrant + LangGraph is a stronger, more recognizable CV story than the
+proprietary Azure Foundry IQ KB, at a fraction of the cost.
 
 ## Prerequisites
-- Phases 4–6 complete (API + both instances + eval).
+
+- Phases 1–6 complete (ingestion, retrieval abstraction, agent, API, eval, both instances).
+- A Qdrant Cloud free-tier cluster provisioned (0.5 vCPU / 1 GB RAM / 4 GB disk — verified
+  ample for the ~3k-chunk corpus).
+
+## Open decisions (resolve before/within the phase)
+
+1. **Embedding model (Qdrant free inference):** `mxbai-embed-large-v1` (1024-dim,
+   MTEB 64.68, matches OpenAI 3-large) **if free on the free tier**, else
+   `all-MiniLM-L6-v2` (384-dim, lighter, still fine for this corpus). Verify the "Cost:
+   Free" label in the Qdrant Console → Inference tab.
+2. **LLM provider/model for generation + routing + grounding:** `gpt-4o-mini` (Azure
+   OpenAI — least change, keeps current client) vs Claude Haiku (new key). Embeddings move
+   to Qdrant either way; Azure OpenAI may be dropped entirely if Claude is chosen.
+3. **Cold-start handling:** accept ~30–60s wake-up on the free host, or add a free
+   uptime-cron ping to keep warm. (Frontend should show a "waking up" state regardless —
+   handled in Phase 8.)
 
 ## Tasks
-- [ ] **P7-T1** — `ARCHITECTURE.md`: components, data flow, graph diagram, sources, decisions.
-  - Commit: `docs(p7): architecture document [P7-T1]`
-  - DoD: includes the LangGraph diagram and the 3-source description for both instances.
-- [ ] **P7-T2** — `README.md` (EN): what it does / what it's for / what knowledge it has / how to run.
-  - Commit: `docs(p7): english readme [P7-T2]`
-  - DoD: covers setup, ingest, run, eval results, both instances; satisfies "fully documented".
-- [ ] **P7-T3** — `README.es.md` (Spanish translation, kept in sync).
-  - Commit: `docs(p7): spanish readme [P7-T3]`
-  - DoD: content parity with EN README.
-- [ ] **P7-T4** — Containerize (Dockerfile) + local run instructions.
-  - Commit: `chore(p7): dockerfile for backend [P7-T4]`
-  - DoD: image builds; container serves `/health` + `/ask`.
-- [ ] **P7-T5** — Deploy to Azure (App Service / Container Apps); wire env + secrets.
-  - Commit: `docs(p7): azure deployment guide and config [P7-T5]`
-  - DoD: public/playground-testable endpoint; secrets via Azure config, not in image.
-- [ ] **P7-T6** — Final pass: master index all ✅, links checked, eval numbers current.
-  - Commit: `docs(p7): finalize phase index and cross-links [P7-T6]`
-  - DoD: docs consistent; no dead links; status accurate.
+
+- [ ] **P7-T1** — Qdrant client + collection schema; provisioning script.
+  - Commit: `feat(p7): qdrant client and collection schema [P7-T1]`
+  - DoD: a `clients`-level Qdrant client; collections (docs/code/career) created with the
+    chosen vector dim + payload fields (mirrors current index fields: `source_kind`,
+    `repo_slug`, `file_path`, `url`, `section_path`, `start_line`/`end_line`). Config-driven
+    collection names per instance.
+- [ ] **P7-T2** — Embeddings via Qdrant Cloud Inference (or chosen provider).
+  - Commit: `feat(p7): qdrant inference embeddings [P7-T2]`
+  - DoD: `embed_chunks`/`embed_texts` path produces vectors from the chosen free model;
+    dim derived live; batching + retry preserved. OpenAI/Azure embedding code removed or
+    gated behind config.
+- [ ] **P7-T3** — Ingestion upload → Qdrant (replace `upload_chunks` target).
+  - Commit: `feat(p7): upsert chunks into qdrant [P7-T3]`
+  - DoD: `repo-expert ingest` populates Qdrant collections for both instances; stable-id
+    upsert (no duplicates on re-ingest); pipeline otherwise unchanged.
+- [ ] **P7-T4** — `kb` retriever against Qdrant (replace Azure AI Search retriever).
+  - Commit: `feat(p7): qdrant kb retriever [P7-T4]`
+  - DoD: `retrieve_kb` returns `RetrievalResult`s from Qdrant (vector + optional payload
+    filtering); same interface, so registry/agent/API need no changes. Issues retriever
+    untouched.
+- [ ] **P7-T5** — Cheap LLM swap for generation/routing/grounding.
+  - Commit: `feat(p7): switch generation to cheap model [P7-T5]`
+  - DoD: chat/JSON calls use the chosen cheap model via config; no behavioral regression in
+    a smoke `/ask`.
+- [ ] **P7-T6** — Re-run eval on the Qdrant stack; refresh results.
+  - Commit: `test(p7): eval on qdrant backend [P7-T6]`
+  - DoD: `docs/eval-results-*.md/json` regenerated; routing/relevance/groundedness compared
+    against the Azure baseline; deltas noted (esp. if the free embed model shifts code
+    relevance).
+- [ ] **P7-T7** — Docs refresh: Azure → Qdrant/HF across all docs.
+  - Commit: `docs(p7): docs reflect qdrant + hf deploy [P7-T7]`
+  - DoD: `ARCHITECTURE.md`, `README.md`, `README.es.md`, `CLAUDE.md` architecture/stack
+    sections, and `.env.example` describe Qdrant + the cheap LLM + the free host; the
+    build-vs-buy paragraph updated (buy = Qdrant managed vector store + free inference;
+    build = chunking, LangGraph, issues tool). `docs/setup.md` covers Qdrant provisioning.
+- [ ] **P7-T8** — Containerize + deploy backend to Hugging Face Spaces.
+  - Commit: `chore(p7): deploy backend to hf spaces [P7-T8]`
+  - DoD: backend image builds and runs on HF Spaces (free); `/health` + `/ask` reachable at
+    a public URL with the dev machine off; secrets (Qdrant key, LLM key, `GITHUB_TOKEN`)
+    set via Space secrets, never in the image; **CORS allows the Hostinger domain**.
+    `docs/deploy.md` rewritten for the HF Spaces + Qdrant path (Azure path trimmed or kept
+    as an appendix).
 
 ## Exit criteria
-- Deployed, reachable endpoint; bilingual docs + ARCHITECTURE complete.
-- Class requirements (≥3 sources, documented, deployable) all demonstrably met.
-- Update master index → all ✅.
+
+- Both instances retrieve from Qdrant; eval re-run and documented.
+- Public, always-reachable backend endpoint on a free host (PC off), CORS-ready for the
+  website, secrets in host config not the image.
+- Docs consistent with the Qdrant + HF + cheap-LLM stack.
+- Recurring cost demonstrably ~$0–1/month.
+
+_Tasks here are re-scoped from the prior "Docs & Deploy" phase; the Azure-era docs and
+Dockerfile are reused and refreshed, not thrown away._

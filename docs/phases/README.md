@@ -14,8 +14,8 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 | 4  | FastAPI Backend                | `feature/phase-4-api`           | ✅     | [phase-4-api.md](phase-4-api.md) |
 | 5  | Evaluation                     | `feature/phase-5-eval`          | ✅     | [phase-5-eval.md](phase-5-eval.md) |
 | 6  | Portfolio Instance             | `feature/phase-6-portfolio`     | ✅     | [phase-6-portfolio.md](phase-6-portfolio.md) |
-| 7  | Docs & Deploy                  | `feature/phase-7-docs-deploy`   | ⬜     | [phase-7-docs-deploy.md](phase-7-docs-deploy.md) |
-| 8  | Frontend (optional)            | `feature/phase-8-frontend`      | ⬜     | [phase-8-frontend.md](phase-8-frontend.md) |
+| 7  | Migrate to Qdrant & Deploy     | `feature/phase-7-docs-deploy`   | 🟡     | [phase-7-qdrant-deploy.md](phase-7-qdrant-deploy.md) |
+| 8  | Chat Widget (Hostinger)        | `feature/phase-8-chat-widget`   | ⬜     | [phase-8-chat-widget.md](phase-8-chat-widget.md) |
 
 ## Conventions (recap — full rules in root `CLAUDE.md`)
 - One **branch per phase**, one **commit per task**.
@@ -24,4 +24,7 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 - Public-repo (FastAPI) instance ships first; portfolio is Phase 6 (config swap).
 
 ## Dependency order
-0 → 1 → 2 → 3 → 4 → 5 → 6 → 7. Phase 8 (frontend) optional, after 4.
+0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8. Phase 7 re-scoped (2026-06) from "Docs & Deploy" to the
+Qdrant migration + cheap deploy after the pivot to a personal-brand website chat; Phase 8
+(chat widget for Hostinger) is now the product feature, no longer optional, and depends on
+Phase 7's deployed backend.

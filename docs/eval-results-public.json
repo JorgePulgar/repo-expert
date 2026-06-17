@@ -1,13 +1,13 @@
 {
   "instance": "public",
   "repo": "fastapi/fastapi",
-  "generated_at": "2026-06-15T17:14:40+00:00",
+  "generated_at": "2026-06-17T10:46:20+00:00",
   "relevance": {
     "n": 16,
     "routing_accuracy": 1.0,
-    "relevance_hit_at_k": 0.875,
+    "relevance_hit_at_k": 1.0,
     "relevance_by_kind": {
-      "code": 0.6,
+      "code": 1.0,
       "docs": 1.0,
       "issue": 1.0,
       "mixed": 1.0
@@ -34,7 +34,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "code-query-fn",
@@ -56,7 +56,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "code-jsonable-encoder",
@@ -108,7 +108,8 @@
           "kb"
         ],
         "predicted_route": [
-          "kb"
+          "kb",
+          "issues"
         ],
         "routing_ok": true,
         "relevant": true
@@ -196,9 +197,9 @@
   },
   "groundedness": {
     "n": 16,
-    "faithfulness_rate": 0.75,
-    "mean_faithfulness_score": 0.887,
-    "self_grounded_rate": 0.875,
+    "faithfulness_rate": 0.938,
+    "mean_faithfulness_score": 0.938,
+    "self_grounded_rate": 1.0,
     "items": [
       {
         "id": "code-depends",
@@ -211,13 +212,13 @@
         "id": "code-apirouter",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "code-query-fn",
         "faithful": false,
-        "score": 0.3,
+        "score": 0.0,
         "self_grounded": true,
         "fallback_used": false
       },
@@ -286,8 +287,8 @@
       },
       {
         "id": "issue-backgroundtasks",
-        "faithful": false,
-        "score": 0.7,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
         "fallback_used": false
       },
@@ -295,22 +296,22 @@
         "id": "issue-dependency-overrides",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
+        "self_grounded": true,
         "fallback_used": true
       },
       {
         "id": "issue-websocket",
-        "faithful": false,
-        "score": 0.5,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
-        "fallback_used": false
+        "fallback_used": true
       },
       {
         "id": "multi-middleware",
-        "faithful": false,
-        "score": 0.7,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
-        "fallback_used": true
+        "fallback_used": false
       }
     ]
   }

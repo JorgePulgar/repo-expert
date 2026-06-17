@@ -1,13 +1,13 @@
 {
   "instance": "portfolio",
   "repo": "JorgePulgar/ai-invoice-analyzer",
-  "generated_at": "2026-06-15T22:18:49+00:00",
+  "generated_at": "2026-06-17T10:49:36+00:00",
   "relevance": {
     "n": 10,
     "routing_accuracy": 1.0,
-    "relevance_hit_at_k": 1.0,
+    "relevance_hit_at_k": 0.8,
     "relevance_by_kind": {
-      "career": 1.0,
+      "career": 0.6,
       "mixed": 1.0
     },
     "top_k": 6,
@@ -21,7 +21,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": true
+        "relevant": false
       },
       {
         "id": "career-azure-search-projects",
@@ -32,7 +32,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": true
+        "relevant": false
       },
       {
         "id": "career-certifications",
@@ -128,49 +128,49 @@
     "n": 10,
     "faithfulness_rate": 1.0,
     "mean_faithfulness_score": 1.0,
-    "self_grounded_rate": 0.0,
+    "self_grounded_rate": 0.9,
     "items": [
       {
         "id": "career-licitai-role",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "career-azure-search-projects",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "career-certifications",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "career-datarmony",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "career-location",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "repo-rag-assistants",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "repo-interview-agent",
@@ -183,22 +183,22 @@
         "id": "repo-fraud-autoencoder",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "repo-clarity-bank",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       },
       {
         "id": "repo-invoice-analyzer",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
-        "fallback_used": true
+        "self_grounded": true,
+        "fallback_used": false
       }
     ]
   }

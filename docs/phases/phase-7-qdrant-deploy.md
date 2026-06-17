@@ -77,7 +77,7 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
   - Commit: `feat(p7): switch generation to cheap model [P7-T5]`
   - DoD: chat/JSON calls use the chosen cheap model via config; no behavioral regression in
     a smoke `/ask`.
-- [ ] **P7-T6** — Re-run eval on the Qdrant stack; refresh results.
+- [x] **P7-T6** — Re-run eval on the Qdrant stack; refresh results.
   - Commit: `test(p7): eval on qdrant backend [P7-T6]`
   - DoD: `docs/eval-results-*.md/json` regenerated; routing/relevance/groundedness compared
     against the Azure baseline; deltas noted (esp. if the free embed model shifts code

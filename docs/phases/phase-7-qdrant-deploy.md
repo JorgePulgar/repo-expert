@@ -53,18 +53,18 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
 
 ## Tasks
 
-- [ ] **P7-T1** — Qdrant client + collection schema; provisioning script.
+- [x] **P7-T1** — Qdrant client + collection schema; provisioning script.
   - Commit: `feat(p7): qdrant client and collection schema [P7-T1]`
   - DoD: a `clients`-level Qdrant client; collections (docs/code/career) created with the
     chosen vector dim + payload fields (mirrors current index fields: `source_kind`,
     `repo_slug`, `file_path`, `url`, `section_path`, `start_line`/`end_line`). Config-driven
     collection names per instance.
-- [ ] **P7-T2** — Embeddings via Qdrant Cloud Inference (or chosen provider).
+- [x] **P7-T2** — Embeddings via Qdrant Cloud Inference (or chosen provider).
   - Commit: `feat(p7): qdrant inference embeddings [P7-T2]`
   - DoD: `embed_chunks`/`embed_texts` path produces vectors from the chosen free model;
     dim derived live; batching + retry preserved. OpenAI/Azure embedding code removed or
     gated behind config.
-- [ ] **P7-T3** — Ingestion upload → Qdrant (replace `upload_chunks` target).
+- [x] **P7-T3** — Ingestion upload → Qdrant (replace `upload_chunks` target).
   - Commit: `feat(p7): upsert chunks into qdrant [P7-T3]`
   - DoD: `repo-expert ingest` populates Qdrant collections for both instances; stable-id
     upsert (no duplicates on re-ingest); pipeline otherwise unchanged.

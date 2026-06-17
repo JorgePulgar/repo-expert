@@ -59,6 +59,15 @@ class Settings(BaseSettings):
 
     # --- App ---
     instance: str = Field("public", alias="REPO_EXPERT_INSTANCE")
+    # Comma-separated list of frontend origins allowed to call the API (CORS).
+    # "*" allows any origin — the default until the site domain is known; tighten
+    # to the Hostinger domain once the widget ships (Phase 8).
+    cors_origins: str = Field("*", alias="CORS_ORIGINS")
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """``cors_origins`` split into a clean list for the CORS middleware."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
 
 @lru_cache

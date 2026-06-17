@@ -32,17 +32,20 @@ WORKDIR /app
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 COPY --from=builder --chown=appuser:appuser /app/src /app/src
 
+# Port 7860 is the Hugging Face Spaces default for Docker SDK apps.
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
-    REPO_EXPERT_INSTANCE=public
+    REPO_EXPERT_INSTANCE=public \
+    PORT=7860
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 7860
 
 # Secrets are injected as env vars at run time (never baked into the image).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"
+    CMD python -c "import os,urllib.request,sys; p=os.environ.get('PORT','7860'); sys.exit(0 if urllib.request.urlopen(f'http://localhost:{p}/health').status==200 else 1)"
 
-CMD ["uvicorn", "repo_expert.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Honor $PORT (HF Spaces injects it); falls back to 7860 for local runs.
+CMD ["sh", "-c", "uvicorn repo_expert.api.app:app --host 0.0.0.0 --port ${PORT:-7860}"]

@@ -7,10 +7,12 @@ import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from repo_expert.api.routes import router
 from repo_expert.config.instance import get_instance_config
+from repo_expert.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,16 @@ def create_app() -> FastAPI:
         lifespan=_lifespan,
     )
     app.include_router(router)
+
+    # Allow the chat widget's origin(s) to call /ask from the browser. Config-driven
+    # via CORS_ORIGINS; defaults to "*" until the Hostinger domain is set (Phase 8).
+    origins = get_settings().cors_origin_list
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
 
     @app.middleware("http")
     async def log_requests(request: Request, call_next):

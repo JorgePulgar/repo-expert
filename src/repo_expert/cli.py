@@ -18,6 +18,16 @@ def _cmd_ingest(args: argparse.Namespace) -> None:
         print(f"  {index}: {count} chunks")
 
 
+def _cmd_provision(args: argparse.Namespace) -> None:
+    from repo_expert.ingestion.qdrant_collections import create_collections
+
+    cfg = get_instance_config(args.instance)
+    created = create_collections(cfg)
+    print(f"Provisioned Qdrant collections ({cfg.name}):")
+    for name in created:
+        print(f"  {name}")
+
+
 def _cmd_eval(args: argparse.Namespace) -> None:
     from repo_expert.eval.runner import run_eval, write_report
 
@@ -41,6 +51,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--instance", default=None, help="Instance to target (default: REPO_EXPERT_INSTANCE)."
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    provision_p = sub.add_parser(
+        "provision", help="Create the Qdrant collections for the active instance."
+    )
+    provision_p.set_defaults(func=_cmd_provision)
 
     ingest_p = sub.add_parser("ingest", help="Fetch, chunk, embed, index, and (re)build the KB.")
     ingest_p.set_defaults(func=_cmd_ingest)

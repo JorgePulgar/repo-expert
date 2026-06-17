@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     azure_search_endpoint: str = Field(..., alias="AZURE_SEARCH_ENDPOINT")
     azure_search_api_key: str = Field(..., alias="AZURE_SEARCH_API_KEY")
 
+    # --- Qdrant (retrieval backend; optional until the migration lands) ---
+    qdrant_url: str | None = Field(None, alias="QDRANT_URL")
+    qdrant_api_key: str | None = Field(None, alias="QDRANT_API_KEY")
+    qdrant_embed_model: str = Field(
+        "mixedbread-ai/mxbai-embed-large-v1", alias="QDRANT_EMBED_MODEL"
+    )
+
     # --- GitHub (optional; required only by the issues/PRs retriever) ---
     github_token: str | None = Field(None, alias="GITHUB_TOKEN")
 

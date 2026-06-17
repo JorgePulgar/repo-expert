@@ -1,89 +1,64 @@
-"""Knowledge base retriever: wraps Foundry IQ agentic retrieval.
+"""Knowledge base retriever: vector search over the Qdrant collections.
 
-The KB ``retrieve`` returns reranked references (title + docKey + score) but, in
-the GA API, no inline ``sourceData``. We resolve each ``docKey`` back to its stored
-document in the docs/code indexes to build full content + citations.
+Queries each of the instance's collections (docs, code, and career when present)
+with server-side embedding (``models.Document``) and fuses the per-collection
+ranked lists into the unified ``RetrievalResult`` shape. We use Reciprocal Rank
+Fusion rather than a raw-score merge: code chunks score systematically lower than
+prose for a natural-language query, so a global cosine sort starves code results.
+RRF fuses by rank, which is scale-free, so each collection gets fair representation.
+Same signature as before, so the registry, agent, and API are unchanged. The live
+issues retriever is untouched.
 """
 
 from __future__ import annotations
 
 import logging
 
-from azure.core.exceptions import ResourceNotFoundError
-from azure.search.documents.knowledgebases.models import (
-    KnowledgeBaseRetrievalRequest,
-    KnowledgeRetrievalSemanticIntent,
-)
-
-from repo_expert.clients import get_kb_retrieval_client, get_search_client
+from repo_expert.clients import get_qdrant_client
 from repo_expert.config.instance import InstanceConfig, get_instance_config
-from repo_expert.ingestion.knowledge import kb_name
+from repo_expert.ingestion.qdrant_collections import collection_names
+from repo_expert.ingestion.qdrant_embed import as_document
 from repo_expert.retrieval.models import Citation, RetrievalResult
 
 logger = logging.getLogger(__name__)
 
-_SELECT = [
-    "id", "content", "title", "file_path", "url",
-    "source_kind", "section_path", "start_line", "end_line",
-]
+# Reciprocal Rank Fusion constant (standard default); larger = flatter rank weighting.
+_RRF_K = 60
 
 
-def _resolve_docs(cfg: InstanceConfig, keys: list[str]) -> dict[str, dict]:
-    """Look up stored documents by id across the docs and code indexes.
-
-    The key field isn't filterable, so resolve each key with ``get_document``,
-    trying the docs index then the code index.
-    """
-    index_names = [cfg.docs_index, cfg.code_index]
-    if cfg.source3_index:  # career KB index (portfolio)
-        index_names.append(cfg.source3_index)
-    clients = [get_search_client(i) for i in index_names]
-    docs: dict[str, dict] = {}
-    for key in dict.fromkeys(keys):  # de-dup, preserve order
-        for client in clients:
-            try:
-                docs[key] = client.get_document(key=key, selected_fields=_SELECT)
-                break
-            except ResourceNotFoundError:
-                continue
-    return docs
+def _to_result(payload: dict, score: float | None) -> RetrievalResult:
+    """Build a unified result from a Qdrant point payload + score."""
+    return RetrievalResult(
+        source="kb",
+        kind=payload.get("source_kind", "docs"),
+        content=payload.get("content", ""),
+        score=score,
+        citation=Citation(
+            title=payload.get("title", ""),
+            url=payload.get("url", ""),
+            file_path=payload.get("file_path"),
+            section_path=payload.get("section_path") or [],
+            start_line=payload.get("start_line"),
+            end_line=payload.get("end_line"),
+        ),
+    )
 
 
 def retrieve_kb(
     query: str, cfg: InstanceConfig | None = None, top: int = 10
 ) -> list[RetrievalResult]:
-    """Retrieve from the knowledge base and return unified results with citations."""
+    """Retrieve from the Qdrant collections and return unified results with citations."""
     cfg = cfg or get_instance_config()
-    client = get_kb_retrieval_client(kb_name(cfg))
-    request = KnowledgeBaseRetrievalRequest(
-        intents=[KnowledgeRetrievalSemanticIntent(search=query)]
-    )
-    response = dict(client.retrieve(request))
-    references = [dict(r) for r in (response.get("references") or [])]
-
-    keys = [r["docKey"] for r in references if r.get("docKey")]
-    docs = _resolve_docs(cfg, keys)
-
-    results: list[RetrievalResult] = []
-    for ref in references:
-        doc = docs.get(ref.get("docKey"))
-        if not doc:
-            continue
-        results.append(
-            RetrievalResult(
-                source="kb",
-                kind=doc.get("source_kind", "docs"),
-                content=doc.get("content", ""),
-                score=ref.get("rerankerScore"),
-                citation=Citation(
-                    title=doc.get("title") or ref.get("title") or "",
-                    url=doc.get("url", ""),
-                    file_path=doc.get("file_path"),
-                    section_path=doc.get("section_path") or [],
-                    start_line=doc.get("start_line"),
-                    end_line=doc.get("end_line"),
-                ),
-            )
-        )
-    results.sort(key=lambda r: r.score or 0.0, reverse=True)
-    return results[:top]
+    client = get_qdrant_client()
+    embedded = as_document(query)
+    fused: list[tuple[float, RetrievalResult]] = []
+    for name in collection_names(cfg):
+        hits = client.query_points(
+            collection_name=name, query=embedded, limit=top, with_payload=True
+        ).points
+        for rank, h in enumerate(hits, start=1):
+            rrf = 1.0 / (_RRF_K + rank)
+            fused.append((rrf, _to_result(h.payload or {}, h.score)))
+    # Stable sort keeps insertion order among ties, so collections interleave by rank.
+    fused.sort(key=lambda x: x[0], reverse=True)
+    return [r for _, r in fused[:top]]

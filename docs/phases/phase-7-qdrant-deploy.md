@@ -68,7 +68,7 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
   - Commit: `feat(p7): upsert chunks into qdrant [P7-T3]`
   - DoD: `repo-expert ingest` populates Qdrant collections for both instances; stable-id
     upsert (no duplicates on re-ingest); pipeline otherwise unchanged.
-- [ ] **P7-T4** — `kb` retriever against Qdrant (replace Azure AI Search retriever).
+- [x] **P7-T4** — `kb` retriever against Qdrant (replace Azure AI Search retriever).
   - Commit: `feat(p7): qdrant kb retriever [P7-T4]`
   - DoD: `retrieve_kb` returns `RetrievalResult`s from Qdrant (vector + optional payload
     filtering); same interface, so registry/agent/API need no changes. Issues retriever

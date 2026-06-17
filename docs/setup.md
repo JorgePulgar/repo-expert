@@ -1,42 +1,44 @@
-# Setup & Azure Provisioning
+# Setup & Provisioning
 
-What to provision before running ingestion (Phase 1). All secrets go in `.env`
-(gitignored) — see `.env.example` for the variable names.
+What to provision before running ingestion. All secrets go in `.env` (gitignored) — see
+`.env.example` for the variable names.
 
-## 1. Azure AI Search (agentic-retrieval capable)
-Foundry IQ knowledge bases require an Azure AI Search service that supports **agentic
-retrieval**. Use a tier/region that offers it (Basic or higher; semantic ranker enabled).
+## 1. Qdrant Cloud (vector store + server-side inference)
+Retrieval runs on a **Qdrant Cloud free-tier cluster** (0.5 vCPU / 1 GB RAM / 4 GB disk —
+ample for the ~3k-chunk corpus). Embeddings are produced **server-side** by Qdrant Cloud
+Inference, so no embedding model runs locally or in the deploy image.
 
-- Create the service in the Azure portal.
-- Copy the **endpoint** → `AZURE_SEARCH_ENDPOINT`.
-- Keys → copy an admin key → `AZURE_SEARCH_API_KEY` (admin needed to create indexes,
-  knowledge sources, and the knowledge base).
+- Create a free cluster at <https://cloud.qdrant.io>.
+- Copy the cluster **URL** (REST, port `:6333`) → `QDRANT_URL`.
+- Create an API key → `QDRANT_API_KEY`.
+- Embedding model → `QDRANT_EMBED_MODEL`. Default `sentence-transformers/all-MiniLM-L6-v2`
+  (384-dim). **Note:** `mxbai-embed-large-v1` is *not* allowed on the free tier — confirm
+  the "Cost: Free" label in **Console → Inference** before changing the model.
+- Collections are created by `uv run repo-expert provision` (config-driven names per
+  instance); ids/dims are not hard-coded.
 
-## 2. Azure OpenAI deployments
-Two deployments are needed:
-- **Embeddings** (e.g. `text-embedding-3-large`) → `AZURE_OPENAI_EMBED_DEPLOYMENT`.
-- **Chat for KB query planning** — must be **gpt-4o / gpt-4.1 / gpt-5 series** (only these
-  are supported for Foundry IQ query planning) → `AZURE_OPENAI_CHAT_DEPLOYMENT`.
+## 2. Azure OpenAI (chat only)
+The agent's routing, generation, and grounding use one cheap chat model. (Embeddings no
+longer use Azure — they run in Qdrant.)
 
-Copy resource endpoint → `AZURE_OPENAI_ENDPOINT`, key → `AZURE_OPENAI_API_KEY`, and set
-`AZURE_OPENAI_API_VERSION`.
+- Create a **`gpt-4o-mini`** deployment → `AZURE_OPENAI_CHAT_DEPLOYMENT`.
+- Resource endpoint → `AZURE_OPENAI_ENDPOINT`, key → `AZURE_OPENAI_API_KEY`, and set
+  `AZURE_OPENAI_API_VERSION`.
+- `AZURE_OPENAI_EMBED_DEPLOYMENT` is unused on the Qdrant stack; leave it blank.
 
-## 3. Microsoft Foundry (new) project
-- Sign in to Microsoft Foundry, ensure **New Foundry** toggle is on.
-- Create (or pick) a project; connect it to the Azure AI Search service above.
-- The knowledge base + knowledge sources are created in Phase 1 (portal or programmatically).
-
-## 4. GitHub token (Phase 2 — live issues tool)
+## 3. GitHub token (live issues tool — public instance)
 Fine-grained PAT, **Public Repositories (read-only)** is enough for `fastapi/fastapi`.
 → `GITHUB_TOKEN`. Bumps API rate limit 60→5000 req/hr. Never commit it.
 
-## 5. App config
+## 4. App config
 - `cp .env.example .env`, fill the values above.
 - `REPO_EXPERT_INSTANCE=public` (or `portfolio`).
-- Verify: `uv run pytest` (config smoke tests) and the settings loader picks up `.env`.
+- Provision + verify: `uv run repo-expert provision` then `uv run pytest` (config smoke
+  tests); the settings loader picks up `.env`.
 
 ## Design notes
-- KB **retrieval reasoning effort = low** — agentic headline lives in our LangGraph, not
-  the managed service (build-vs-buy boundary; see `CLAUDE.md`).
-- Index + KB names come from the instance config (`src/repo_expert/config/instance.py`),
+- **Managed vector store, built fusion** — Qdrant stores/searches; the agentic headline
+  (routing, RRF fusion, fallback, grounding) lives in our LangGraph (build-vs-buy boundary;
+  see `CLAUDE.md`).
+- Collection names come from the instance config (`src/repo_expert/config/instance.py`),
   not hard-coded.

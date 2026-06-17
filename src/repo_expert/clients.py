@@ -9,6 +9,7 @@ from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.knowledgebases import KnowledgeBaseRetrievalClient
 from openai import AzureOpenAI
+from qdrant_client import QdrantClient
 
 from repo_expert.config.settings import get_settings
 
@@ -37,6 +38,17 @@ def get_search_client(index_name: str) -> SearchClient:
     return SearchClient(
         s.azure_search_endpoint, index_name, AzureKeyCredential(s.azure_search_api_key)
     )
+
+
+@lru_cache
+def get_qdrant_client() -> QdrantClient:
+    """Cached Qdrant Cloud client (vector store + free inference embeddings)."""
+    s = get_settings()
+    if not s.qdrant_url:
+        raise RuntimeError("QDRANT_URL is not set; cannot reach the Qdrant cluster.")
+    # cloud_inference: embeddings are produced server-side from models.Document at
+    # upsert/query time (free tier), so no embedding model runs in our process.
+    return QdrantClient(url=s.qdrant_url, api_key=s.qdrant_api_key, cloud_inference=True)
 
 
 @lru_cache

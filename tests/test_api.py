@@ -6,12 +6,19 @@ from fastapi.testclient import TestClient
 from repo_expert.agent.agent import AnswerResult
 from repo_expert.api import routes
 from repo_expert.api.app import create_app
+from repo_expert.config.settings import get_settings
 from repo_expert.retrieval.models import Citation
 
 
 @pytest.fixture
-def client():
-    return TestClient(create_app(), raise_server_exceptions=False)
+def client(monkeypatch):
+    # Force the public instance regardless of the developer's local .env, and reset
+    # the settings cache so the override is read (get_settings is lru_cached).
+    monkeypatch.setenv("REPO_EXPERT_INSTANCE", "public")
+    get_settings.cache_clear()
+    app = create_app()
+    yield TestClient(app, raise_server_exceptions=False)
+    get_settings.cache_clear()
 
 
 def test_health_ok(client, monkeypatch) -> None:

@@ -82,7 +82,7 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
   - DoD: `docs/eval-results-*.md/json` regenerated; routing/relevance/groundedness compared
     against the Azure baseline; deltas noted (esp. if the free embed model shifts code
     relevance).
-- [ ] **P7-T7** — Docs refresh: Azure → Qdrant/HF across all docs.
+- [x] **P7-T7** — Docs refresh: Azure → Qdrant/HF across all docs.
   - Commit: `docs(p7): docs reflect qdrant + hf deploy [P7-T7]`
   - DoD: `ARCHITECTURE.md`, `README.md`, `README.es.md`, `CLAUDE.md` architecture/stack
     sections, and `.env.example` describe Qdrant + the cheap LLM + the free host; the

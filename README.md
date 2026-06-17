@@ -8,26 +8,28 @@ citations.** One codebase, two instances selected by config — no code changes 
 - **public** — class deliverable pointed at a serious public repo (`fastapi/fastapi`).
 - **portfolio** — recruiter demo pointed at Jorge Pulgar's portfolio repos + a Career KB.
 
-Stack: Azure AI Search (hybrid + semantic reranker, Foundry IQ knowledge base) ·
-LangGraph (corrective/agentic RAG) · FastAPI · Azure OpenAI. Python 3.12, managed with
-[uv](https://docs.astral.sh/uv/).
+Stack: Qdrant Cloud (vector search + free server-side inference) · RRF fusion · LangGraph
+(corrective/agentic RAG) · FastAPI · Azure OpenAI `gpt-4o-mini`. Deployed free on Hugging
+Face Spaces. Python 3.12, managed with [uv](https://docs.astral.sh/uv/). Recurring cost
+~$0–1/month.
 
 ## What it does
 
 A FastAPI `/ask` endpoint hands the question to a **LangGraph** agent that
 routes → retrieves → generates with citations → self-checks grounding → falls back and
-retries if the answer isn't supported. Retrieval runs over a **Foundry IQ knowledge base**
-on Azure AI Search built from our own custom-chunked indexes. The agent owns the
-reasoning; the managed service owns retrieval (build-vs-buy — see
+retries if the answer isn't supported. Retrieval runs **vector search over Qdrant Cloud**
+collections built from our own custom-chunked content, fused across docs/code/career with
+**Reciprocal Rank Fusion**. The agent owns the reasoning and the fusion; the managed
+service owns vector storage + embedding (build-vs-buy — see
 [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
 ## What knowledge it has — three heterogeneous sources
 
 | # | Source | public | portfolio |
 |---|---|---|---|
-| 1 | Docs / markdown (in KB) | FastAPI docs + README | Markdown across portfolio repos |
-| 2 | Source code (in KB, symbol-chunked) | `fastapi/**/*.py` | Python across portfolio repos |
-| 3 | **Swapped per instance** | **GitHub issues/PRs** — live via API | **Career KB** — indexed in the KB |
+| 1 | Docs / markdown (in Qdrant) | FastAPI docs + README | Markdown across portfolio repos |
+| 2 | Source code (in Qdrant, symbol-chunked) | `fastapi/**/*.py` | Python across portfolio repos |
+| 3 | **Swapped per instance** | **GitHub issues/PRs** — live via API | **Career KB** — indexed in Qdrant |
 
 The third source differs in *kind* (live API tool vs indexed knowledge source), satisfying
 the ≥3-heterogeneous-sources requirement. The active instance is chosen entirely by config
@@ -37,15 +39,15 @@ full design.
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/) (manages Python 3.12 automatically).
-- Azure AI Search (agentic-retrieval capable) + Azure OpenAI deployments. A GitHub token
-  is needed only for the public instance's live issues source. Provisioning steps:
-  [`docs/setup.md`](docs/setup.md).
+- A Qdrant Cloud free-tier cluster (with server-side inference) + an Azure OpenAI
+  `gpt-4o-mini` deployment. A GitHub token is needed only for the public instance's live
+  issues source. Provisioning steps: [`docs/setup.md`](docs/setup.md).
 
 ## Setup
 
 ```bash
 uv sync                      # install deps into .venv
-cp .env.example .env         # then fill in Azure + GitHub keys
+cp .env.example .env         # then fill in Qdrant + Azure OpenAI + GitHub keys
 ```
 
 Select the instance in `.env` (or per-command with `--instance`):
@@ -60,7 +62,8 @@ missing required variable raises at startup naming the offending variable.
 ## Run
 
 ```bash
-# 1. Build the knowledge base from the target repo(s)
+# 1. Create the Qdrant collections, then ingest the target repo(s)
+uv run repo-expert provision
 uv run repo-expert ingest
 uv run repo-expert --instance portfolio ingest   # portfolio instance
 
@@ -100,36 +103,37 @@ relevance** and **groundedness**. Regenerate with `uv run repo-expert eval` (add
 | Metric | Value |
 | --- | --- |
 | Routing accuracy | **1.00** |
-| Relevance hit@6 | **0.88** (docs 1.0 · code 0.6 · issues 1.0 · mixed 1.0) |
-| Faithfulness rate (judge) | **0.75** |
-| Mean faithfulness score | **0.89** |
-| Agent self-grounded rate | **0.88** |
+| Relevance hit@6 | **1.00** (docs 1.0 · code 1.0 · issues 1.0 · mixed 1.0) |
+| Faithfulness rate (judge) | **0.94** |
+| Mean faithfulness score | **0.94** |
+| Agent self-grounded rate | **1.00** |
 
 Full report: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 
 **Portfolio instance** (n=10, career + portfolio-repo questions): **routing 1.0,
-relevance hit@6 1.0, faithfulness 1.0**
+relevance hit@6 0.8 (career 0.6 · mixed 1.0), faithfulness 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Off-topic questions
 are declined by the config-driven scope guardrail.
 
-**Analysis / limitations**
-- Docs and issues retrieval are strong (1.0); overall hit@6 is 0.88.
+**Analysis / limitations** (Qdrant stack; full Azure→Qdrant comparison in
+[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md)):
+- The migration to Qdrant + a cheaper LLM **improved** the public instance: hit@6
+  0.88 → 1.0, code relevance 0.6 → 1.0, faithfulness 0.75 → 0.94 — at ~75× lower cost.
+- **RRF fusion** drives the code gain: code chunks score lower than prose on cosine, so a
+  global score sort starved them; fusing collections by rank fixes it.
 - Issues retrieval uses an **LLM query-rewrite**: prose questions are condensed to keywords
-  because the GitHub Search API ANDs terms and returns nothing for prose. This lifted issue
-  relevance 0.0 → 1.0.
-- Code relevance 0.6: exact symbol files aren't always in top-k; symbol-level chunking +
-  reranking handles most but not all "where is X defined" lookups.
-- The corrective loop catches weak drafts before answering. Public faithfulness rate is
-  lower than a KB-only baseline precisely *because* the agent now attempts substantive
-  issue answers instead of falling back to the KB — a deliberate trade of caution for
-  coverage.
-- Groundedness uses an LLM judge (gpt-4o), so scores carry small run-to-run variance.
+  because the GitHub Search API ANDs terms and returns nothing for prose (0.0 → 1.0).
+- One regression: portfolio **career recall** dropped 1.0 → 0.6 — the cost of the free-tier
+  embed model (`all-MiniLM-L6-v2`, 384-dim, ~256-token input window) truncating longer
+  career entries. Groundedness stays 1.0; mitigations are documented.
+- Groundedness uses an LLM judge (gpt-4o-mini), so scores carry small run-to-run variance.
 
 ## Documentation
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — components, data flow, agent graph, decisions.
-- [`docs/setup.md`](docs/setup.md) — Azure provisioning.
-- [`docs/deploy.md`](docs/deploy.md) — container build + Azure deployment.
+- [`docs/setup.md`](docs/setup.md) — Qdrant + Azure OpenAI provisioning.
+- [`docs/deploy.md`](docs/deploy.md) — container build + Hugging Face Spaces deployment.
+- [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) — backend-migration eval deltas.
 - [`docs/phases/README.md`](docs/phases/README.md) — phase-by-phase development log.
 
 ## License

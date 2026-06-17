@@ -37,40 +37,46 @@ containing: the phase's context (what/why), its task list, and exit criteria.
 
 FastAPI backend exposes a `/ask` endpoint. A **LangGraph** agent orchestrates:
 router → retrieve → fallback → corrective/grounding → generate with citations.
-Retrieval backend is a **Foundry IQ knowledge base** (built on Azure AI Search agentic
-retrieval) over our own custom-chunked indexes; LangGraph wraps it and owns the headline
-reasoning (routing, fallback, self-correction). LLM is **Azure OpenAI**. Three
-heterogeneous knowledge sources (different *kinds*): (1) docs/markdown and (2) source code
-(code-aware chunking) — both indexed into the **KB**; (3) GitHub issues/PRs **live via API
-as a tool outside the KB** — swapped for a **Career Knowledge Base** (indexed into the KB)
-in the portfolio instance.
+Retrieval backend is **Qdrant Cloud** (managed vector store + free server-side inference)
+over our own custom-chunked collections; LangGraph wraps it and owns the headline reasoning
+(routing, RRF fusion, fallback, self-correction). Chat LLM is **Azure OpenAI gpt-4o-mini**;
+embeddings run server-side in Qdrant. Three heterogeneous knowledge sources (different
+*kinds*): (1) docs/markdown and (2) source code (code-aware chunking) — both in **Qdrant**;
+(3) GitHub issues/PRs **live via API as a tool outside Qdrant** — swapped for a **Career
+Knowledge Base** (a Qdrant collection) in the portfolio instance.
 
-**Build-vs-buy boundary:** *buy* = Foundry IQ/AI Search managed retrieval over indexed
-content; *build* = custom code-aware chunking + index, LangGraph orchestration + corrective
-grounding, and the live GitHub issues tool. Keep KB **reasoning effort low** so the agentic
-headline lives in our LangGraph, not the managed service.
+**Build-vs-buy boundary:** *buy* = Qdrant managed vector store + free server-side
+embeddings; *build* = custom code-aware chunking + upsert, RRF fusion across collections,
+LangGraph orchestration + corrective grounding, and the live GitHub issues tool. The
+agentic headline + fusion live in our code, not the managed service.
+
+> **Phase 7 migration:** retrieval moved from Azure AI Search / Foundry IQ to Qdrant Cloud
+> (~$75/mo → ~$0–1/mo) for a low-traffic personal-brand site; deploy target is Hugging Face
+> Spaces (free). Interfaces unchanged — only ingestion upsert + the `kb` retriever rewired.
 
 ## Config-driven targeting (core requirement)
 Switching instance = **changing config, not code**. A single config object selects the
-target repo, which indexes to use, and which "source 3" is active (issues vs career KB).
+target repo, which collections to use, and which "source 3" is active (issues vs career KB).
 Designed in Phase 1, honored everywhere after.
 
 ---
 
 ## Stack & tooling
 - **Python** 3.12, dependency manager **uv** (`uv add`, `uv run`, `uv.lock` committed).
-- Retrieval backend: **Foundry IQ knowledge base** on Azure AI Search agentic retrieval
-  (hybrid + semantic rerank), over custom-built indexes. KB reasoning effort = low.
-- Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG wrapping the KB).
-- Live source: GitHub issues/PRs tool, outside the KB.
-- LLM: Azure OpenAI (embeddings + KB query planning + agent generation; gpt-4o/4.1/5 for KB planning).
-- Frontend (optional, Phase 8): React + TS. **Node deps via pnpm only**, never npm/npx.
+- Retrieval backend: **Qdrant Cloud** (free tier) — vector search + free server-side
+  inference (`all-MiniLM-L6-v2`, 384-dim) over custom-built collections. RRF fusion in our code.
+- Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG over Qdrant).
+- Live source: GitHub issues/PRs tool, outside Qdrant.
+- LLM: Azure OpenAI **gpt-4o-mini** (routing + generation + grounding judge). Embeddings are
+  server-side in Qdrant, not Azure.
+- Deploy: backend on **Hugging Face Spaces** (free, always-reachable); chat widget on Hostinger.
+- Frontend (Phase 8): embeddable chat widget. **Node deps via pnpm only**, never npm/npx.
 - Secrets in `.env` (gitignored). `.env.example` documents required keys. Never commit keys.
 
 ## Class requirements (must satisfy)
 - ≥ 3 heterogeneous knowledge sources.
 - Fully documented: what it does, what it's for, what knowledge it has.
-- Deployable to Azure / testable in the playground.
+- Deployable / testable (Hugging Face Spaces; `/health` + `/ask` reachable with PC off).
 
 ## Deliverables
 - Bilingual README (`README.md` EN + `README.es.md`), `ARCHITECTURE.md`.

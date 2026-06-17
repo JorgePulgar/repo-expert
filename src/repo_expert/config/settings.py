@@ -46,8 +46,10 @@ class Settings(BaseSettings):
     # --- Qdrant (retrieval backend; optional until the migration lands) ---
     qdrant_url: str | None = Field(None, alias="QDRANT_URL")
     qdrant_api_key: str | None = Field(None, alias="QDRANT_API_KEY")
+    # mxbai-embed-large-v1 is blocked on the Qdrant free tier (P7-T2 gate, 2026-06-17);
+    # MiniLM (384-dim) is the pre-authorized fallback served free via cloud inference.
     qdrant_embed_model: str = Field(
-        "mixedbread-ai/mxbai-embed-large-v1", alias="QDRANT_EMBED_MODEL"
+        "sentence-transformers/all-MiniLM-L6-v2", alias="QDRANT_EMBED_MODEL"
     )
 
     # --- GitHub (optional; required only by the issues/PRs retriever) ---

@@ -39,10 +39,12 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
 
 ## Decisions (locked 2026-06-16)
 
-1. **Embedding model:** `mxbai-embed-large-v1` (1024-dim, MTEB 64.68, matches OpenAI
-   3-large) via Qdrant Cloud free inference. **Gate:** confirm the "Cost: Free" label in
-   the Qdrant Console → Inference tab during P7-T2; if it is not free on the free tier,
-   fall back to `all-MiniLM-L6-v2` (384-dim).
+1. **Embedding model:** ~~`mxbai-embed-large-v1` (1024-dim)~~ → **`all-MiniLM-L6-v2`
+   (384-dim)**. **Gate result (P7-T2, 2026-06-17):** mxbai is **blocked on the Qdrant free
+   tier** (upsert returns `401: "This model: mixedbread-ai/mxbai-embed-large-v1 is not
+   allowed in free tier"`). Adopted the pre-authorized MiniLM fallback, served free via
+   **server-side cloud inference** (`cloud_inference=True`, `models.Document`). Trade-off:
+   lower dim + ~256-token input truncation; T6 eval quantifies the relevance impact.
 2. **LLM (generation + routing + grounding):** `gpt-4o-mini` on **Azure OpenAI** — keeps
    the current client, least change. Azure OpenAI is retained for chat; embeddings move to
    Qdrant.

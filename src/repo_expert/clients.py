@@ -46,7 +46,9 @@ def get_qdrant_client() -> QdrantClient:
     s = get_settings()
     if not s.qdrant_url:
         raise RuntimeError("QDRANT_URL is not set; cannot reach the Qdrant cluster.")
-    return QdrantClient(url=s.qdrant_url, api_key=s.qdrant_api_key)
+    # cloud_inference: embeddings are produced server-side from models.Document at
+    # upsert/query time (free tier), so no embedding model runs in our process.
+    return QdrantClient(url=s.qdrant_url, api_key=s.qdrant_api_key, cloud_inference=True)
 
 
 @lru_cache

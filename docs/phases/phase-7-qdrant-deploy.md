@@ -73,7 +73,7 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
   - DoD: `retrieve_kb` returns `RetrievalResult`s from Qdrant (vector + optional payload
     filtering); same interface, so registry/agent/API need no changes. Issues retriever
     untouched.
-- [ ] **P7-T5** — Cheap LLM swap for generation/routing/grounding.
+- [x] **P7-T5** — Cheap LLM swap for generation/routing/grounding.
   - Commit: `feat(p7): switch generation to cheap model [P7-T5]`
   - DoD: chat/JSON calls use the chosen cheap model via config; no behavioral regression in
     a smoke `/ask`.

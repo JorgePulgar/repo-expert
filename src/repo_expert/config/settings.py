@@ -35,8 +35,10 @@ class Settings(BaseSettings):
     azure_openai_chat_deployment: str = Field(
         ..., alias="AZURE_OPENAI_CHAT_DEPLOYMENT"
     )
-    azure_openai_embed_deployment: str = Field(
-        ..., alias="AZURE_OPENAI_EMBED_DEPLOYMENT"
+    # Unused on the Qdrant stack (embeddings run server-side in Qdrant); required only
+    # by the legacy Azure AI Search embedding path. Optional so the app starts without it.
+    azure_openai_embed_deployment: str | None = Field(
+        None, alias="AZURE_OPENAI_EMBED_DEPLOYMENT"
     )
 
     # --- Azure AI Search ---

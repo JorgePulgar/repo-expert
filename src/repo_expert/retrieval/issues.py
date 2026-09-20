@@ -37,7 +37,6 @@ def _to_keywords(question: str) -> str:
         client = get_openai_client()
         resp = client.chat.completions.create(
             model=get_settings().azure_openai_chat_deployment,
-            temperature=0.0,
             messages=[
                 {"role": "system", "content": _KEYWORD_SYSTEM},
                 {"role": "user", "content": question},

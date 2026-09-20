@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from repo_expert.agent.agent import ask
+from repo_expert.api.rate_limit import enforce_rate_limit
 from repo_expert.api.schemas import AskRequest, AskResponse
 from repo_expert.clients import get_qdrant_client
 from repo_expert.config.instance import get_instance_config
@@ -46,8 +47,12 @@ def health() -> dict:
     }
 
 
-@router.post("/ask", response_model=AskResponse)
+@router.post("/ask", response_model=AskResponse, dependencies=[Depends(enforce_rate_limit)])
 def ask_endpoint(request: AskRequest) -> AskResponse:
-    """Answer a question about the active instance's repo, with citations."""
+    """Answer a question about the active instance's repo, with citations.
+
+    Rate-limited per IP; `/health` deliberately is not, so the chat page can send a
+    warm-up ping on load without spending part of a visitor's budget.
+    """
     result = ask(request.question)
     return AskResponse(**result.model_dump())

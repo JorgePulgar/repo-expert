@@ -114,7 +114,8 @@ As plain **env vars**:
 | `AZURE_OPENAI_CHAT_DEPLOYMENT` | `gpt-5-mini`                                    |
 | `QDRANT_EMBED_MODEL`           | `sentence-transformers/all-MiniLM-L6-v2`        |
 | `REPO_EXPERT_INSTANCE`         | `public` or `portfolio`                         |
-| `CORS_ORIGINS`                 | the site origin once known; `*` until then      |
+| `CORS_ORIGINS`                 | the site origin(s) allowed to call the API      |
+| `RATE_LIMIT_PER_HOUR`          | per-IP budget for `/ask` (default `10`, `0` disables) |
 
 **Switch instance** = change `REPO_EXPERT_INSTANCE` and roll a revision — no rebuild.
 
@@ -157,6 +158,27 @@ count, e.g. `docs: 2146 · code: 941 · career: 22`.
 > 30 days from **2026-09-20**. When it lapses the subscription and every resource in it go
 > with it — which is exactly how the previous Foundry resource vanished and broke the stack.
 > Convert to pay-as-you-go, or move to the `Azure for Students` subscription, before then.
+
+---
+
+## Abuse protection
+
+`/ask` is unauthenticated and spends money on every call, so it is rate-limited to
+`RATE_LIMIT_PER_HOUR` questions per IP (default 10), returning `429` with `Retry-After`
+once exceeded. Throttled requests are rejected **before** any LLM call, so they cost
+nothing. `/health` is deliberately exempt: the chat page pings it on load to warm the
+scale-to-zero container.
+
+> **CORS is not a security control here.** It is enforced by browsers only — a script or
+> `curl` calling the endpoint directly ignores it entirely. The rate limit, not
+> `CORS_ORIGINS`, is what protects the credit.
+
+The counter is in-process, which is correct at `--max-replicas 1`. Scaling out would give
+each replica its own counter (effective limit `limit × replicas`); move the state to Redis
+or the ingress if that day comes.
+
+Second line of defence: an Azure budget (`repo-expert-guard`, $50/month) alerts the
+subscription owner at 50% and 80% of spend.
 
 ---
 

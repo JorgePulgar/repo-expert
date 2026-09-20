@@ -48,6 +48,11 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
 | `CORS_ORIGINS` on the backend | `sitemap.xml`, `llms.txt`, canonical + OG meta |
 | Phase docs, task tracking | Nav links from `portfolio.html` / `portfolio/repo-expert.html` |
 
+> The website repo has its own queue: `.claude/TASKS.md` **Phase 4 — RAG chat embed**
+> (A8 gating + endpoint, A9 the embed) and a spec in `.claude/CONTEXT.md`. A8 is answered
+> by decision 6 below; A9 moves from `/portfolio.html` to `/chat.html` per the decision
+> below, which also needs the architecture block and `sitemap.xml` updated there.
+
 ### Known fixes owed in `jorge-pulgar-web` (found during the Phase 7 audit)
 
 - `portfolio/repo-expert.html` meta description says **"Desplegado en Hugging Face Spaces"**
@@ -63,6 +68,7 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
 - ✅ Phase 7 complete: backend live at
   `https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io`,
   portfolio instance on Qdrant.
+- ✅ Abuse protection live (P8-T0): 10 questions/hour per IP.
 - ✅ `CORS_ORIGINS` scoped to `https://jorgepulgar.com`, `https://www.jorgepulgar.com`, and
   `http://localhost:5500` / `http://127.0.0.1:5500` for local development. Verified: an
   allowed origin gets `access-control-allow-origin` echoed back; any other origin gets
@@ -78,9 +84,28 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
 5. **Cold start:** fire a `/health` ping on page load so the scale-to-zero container warms
    while the visitor reads the intro and types. No always-on replica — that would burn the
    free grant.
+6. **Gating: open + rate-limited.** No email gate — a recruiter who hits a form wall
+   leaves. `/ask` is capped at **10 questions per hour per IP**; `/health` is never limited
+   so the warm ping stays free. Cloudflare Turnstile only if abuse actually appears.
+   (This answers **A8** in `jorge-pulgar-web/.claude/TASKS.md`.)
 
 ## Tasks
 
+- [x] **P8-T0** — Abuse protection on the public `/ask` endpoint. **Done 2026-09-21.**
+  - Commit: `feat(p8): rate limit the public ask endpoint [P8-T0]`
+  - Why: `/ask` is unauthenticated and spends money on every call (three LLM round trips:
+    routing, generation, grounding judge). **CORS does not protect it** — CORS is enforced
+    by browsers, so a script calling the endpoint directly is unaffected. Before this, the
+    endpoint was an open LLM billed to a trial credit.
+  - DoD: per-IP sliding window, 10 questions/hour, `429` + `Retry-After` when exceeded,
+    rejected *before* any LLM call so a throttled request costs nothing; `/health`
+    deliberately exempt; limit configurable via `RATE_LIMIT_PER_HOUR` (0 disables, local
+    only). Verified in production: `200, 200, 429` with `Retry-After: 3580` at a temporary
+    limit of 2, and `/health` unlimited across 6 pings.
+  - Also: Azure budget `repo-expert-guard`, $50/month, alerts at 50% and 80%.
+  - Note: the counter is in-process, which is correct at `--max-replicas 1`. If the app is
+    ever scaled out, each replica keeps its own counter and the effective limit becomes
+    `limit × replicas` — move the state to Redis or the ingress at that point.
 - [ ] **P8-T1** — `rex-chat.js` + `rex-chat.css` scaffold + standalone demo page.
   - Commit: `chore(p8): scaffold vanilla chat client [P8-T1]`
   - DoD: opening the demo page renders an empty chat shell (messages area, input, send);

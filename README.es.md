@@ -12,9 +12,16 @@ configuración — sin cambios de código para alternar:
   Jorge Pulgar + una Base de Conocimiento de Carrera (Career KB).
 
 Stack: Qdrant Cloud (búsqueda vectorial + inferencia gratuita del lado del servidor) ·
-fusión RRF · LangGraph (RAG correctivo/agéntico) · FastAPI · Azure OpenAI `gpt-4o-mini`.
-Desplegado gratis en Hugging Face Spaces. Python 3.12, gestionado con
+fusión RRF · LangGraph (RAG correctivo/agéntico) · FastAPI · Azure OpenAI `gpt-5-mini`.
+Desplegado en Azure Container Apps (escala a cero). Python 3.12, gestionado con
 [uv](https://docs.astral.sh/uv/). Costo recurrente ~$0–1/mes.
+
+**En vivo (instancia portfolio):**
+`https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io`
+— [`/health`](https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io/health)
+· [`/docs`](https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io/docs).
+Al escalar a cero, la primera petición tras un periodo inactivo tarda unos segundos en
+despertar el contenedor.
 
 ## Qué hace
 
@@ -44,7 +51,7 @@ por completo mediante configuración (`src/repo_expert/config/instance.py`); ver
 
 - [uv](https://docs.astral.sh/uv/) (gestiona Python 3.12 automáticamente).
 - Un clúster gratuito de Qdrant Cloud (con inferencia del lado del servidor) + un deployment
-  `gpt-4o-mini` de Azure OpenAI. Se necesita un token de GitHub solo para la fuente de issues
+  `gpt-5-mini` de Azure OpenAI. Se necesita un token de GitHub solo para la fuente de issues
   en vivo de la instancia public. Pasos de aprovisionamiento: [`docs/setup.md`](docs/setup.md).
 
 ## Instalación
@@ -117,10 +124,17 @@ agéntico: **relevancia de recuperación** y **fundamentación (groundedness)**.
 
 Reporte completo: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 
-**Instancia portfolio** (n=10, preguntas de carrera + repos de portafolio): **enrutamiento
-1.0, relevancia hit@6 0.8 (carrera 0.6 · mixto 1.0), fidelidad 1.0**
+> ⚠️ **Estos números de la instancia public se midieron con `gpt-4o-mini` (2026-06) y no
+> se han vuelto a ejecutar tras el cambio a `gpt-5-mini`.** Repetirlos requiere un
+> `GITHUB_TOKEN` válido para la fuente de issues en vivo; los números de portfolio de abajo
+> sí están actualizados.
+
+**Instancia portfolio** (n=10, preguntas de carrera + repos de portafolio, re-ejecutada el
+2026-09-20 con `gpt-5-mini`): **enrutamiento 1.0, relevancia hit@6 0.8 (carrera 0.6 ·
+mixto 1.0), fidelidad 0.7, fidelidad media 0.9**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Las preguntas fuera
-de tema son rechazadas por la barrera de alcance configurable.
+de tema son rechazadas por la barrera de alcance configurable. La nota de cambio de modelo
+más abajo explica por qué se movió la fidelidad.
 
 **Análisis / limitaciones** (stack Qdrant; comparación completa Azure→Qdrant en
 [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md)):
@@ -134,17 +148,22 @@ de tema son rechazadas por la barrera de alcance configurable.
   y no devuelve nada para prosa (0.0 → 1.0).
 - Una regresión: el recall de **carrera** en portfolio bajó 1.0 → 0.6 — el costo del modelo
   de embeddings gratuito (`all-MiniLM-L6-v2`, 384-dim, ventana de ~256 tokens) que trunca las
-  entradas de carrera más largas. La fundamentación se mantiene en 1.0; hay mitigaciones
-  documentadas.
-- La fundamentación usa un juez LLM (gpt-4o-mini), por lo que los puntajes tienen pequeña
-  varianza entre ejecuciones.
+  entradas de carrera más largas. Hay mitigaciones documentadas.
+- La fundamentación usa un juez LLM (gpt-5-mini), por lo que los puntajes tienen varianza
+  entre ejecuciones. El juez ya no corre a `temperature=0` — gpt-5-mini solo acepta su
+  valor por defecto — así que la varianza es mayor que en ejecuciones anteriores.
+- **Cambio de modelo 2026-09-20:** `gpt-4o-mini` dejó de poder desplegarse en Azure
+  (obsoleto desde 2026-03-31), así que el stack pasó a `gpt-5-mini`. La recuperación no
+  cambia; la fidelidad en portfolio pasa de 1.0 a 0.7, sobre todo porque gpt-5-mini juzga
+  con más severidad (dos de los tres fallos puntúan 0.8–0.85). El delta completo está en
+  [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md).
 
 ## Documentación
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — componentes, flujo de datos, grafo del agente,
   decisiones.
 - [`docs/setup.md`](docs/setup.md) — aprovisionamiento de Qdrant + Azure OpenAI.
-- [`docs/deploy.md`](docs/deploy.md) — build del contenedor + despliegue en Hugging Face Spaces.
+- [`docs/deploy.md`](docs/deploy.md) — build del contenedor + despliegue en Azure Container Apps.
 - [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) — deltas de la migración de backend.
 - [`docs/phases/README.md`](docs/phases/README.md) — registro de desarrollo fase por fase.
 

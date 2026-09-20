@@ -39,7 +39,7 @@ FastAPI backend exposes a `/ask` endpoint. A **LangGraph** agent orchestrates:
 router → retrieve → fallback → corrective/grounding → generate with citations.
 Retrieval backend is **Qdrant Cloud** (managed vector store + free server-side inference)
 over our own custom-chunked collections; LangGraph wraps it and owns the headline reasoning
-(routing, RRF fusion, fallback, self-correction). Chat LLM is **Azure OpenAI gpt-4o-mini**;
+(routing, RRF fusion, fallback, self-correction). Chat LLM is **Azure OpenAI gpt-5-mini**;
 embeddings run server-side in Qdrant. Three heterogeneous knowledge sources (different
 *kinds*): (1) docs/markdown and (2) source code (code-aware chunking) — both in **Qdrant**;
 (3) GitHub issues/PRs **live via API as a tool outside Qdrant** — swapped for a **Career
@@ -51,8 +51,8 @@ LangGraph orchestration + corrective grounding, and the live GitHub issues tool.
 agentic headline + fusion live in our code, not the managed service.
 
 > **Phase 7 migration:** retrieval moved from Azure AI Search / Foundry IQ to Qdrant Cloud
-> (~$75/mo → ~$0–1/mo) for a low-traffic personal-brand site; deploy target is Hugging Face
-> Spaces (free). Interfaces unchanged — only ingestion upsert + the `kb` retriever rewired.
+> (~$75/mo → ~$0–1/mo) for a low-traffic personal-brand site; deploy target is Azure Container
+> Apps (scale-to-zero; HF Spaces now requires PRO for Docker). Interfaces unchanged — only ingestion upsert + the `kb` retriever rewired.
 
 ## Config-driven targeting (core requirement)
 Switching instance = **changing config, not code**. A single config object selects the
@@ -67,16 +67,16 @@ Designed in Phase 1, honored everywhere after.
   inference (`all-MiniLM-L6-v2`, 384-dim) over custom-built collections. RRF fusion in our code.
 - Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG over Qdrant).
 - Live source: GitHub issues/PRs tool, outside Qdrant.
-- LLM: Azure OpenAI **gpt-4o-mini** (routing + generation + grounding judge). Embeddings are
+- LLM: Azure OpenAI **gpt-5-mini** (routing + generation + grounding judge). Embeddings are
   server-side in Qdrant, not Azure.
-- Deploy: backend on **Hugging Face Spaces** (free, always-reachable); chat widget on Hostinger.
+- Deploy: backend on **Azure Container Apps** (scale-to-zero, always-reachable); chat widget on Hostinger.
 - Frontend (Phase 8): embeddable chat widget. **Node deps via pnpm only**, never npm/npx.
 - Secrets in `.env` (gitignored). `.env.example` documents required keys. Never commit keys.
 
 ## Class requirements (must satisfy)
 - ≥ 3 heterogeneous knowledge sources.
 - Fully documented: what it does, what it's for, what knowledge it has.
-- Deployable / testable (Hugging Face Spaces; `/health` + `/ask` reachable with PC off).
+- Deployable / testable (Azure Container Apps; `/health` + `/ask` reachable with PC off).
 
 ## Deliverables
 - Bilingual README (`README.md` EN + `README.es.md`), `ARCHITECTURE.md`.

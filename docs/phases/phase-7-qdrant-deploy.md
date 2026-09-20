@@ -1,6 +1,6 @@
 # Phase 7 — Migrate retrieval to Qdrant & deploy cheaply
 
-**Branch:** `feature/phase-7-docs-deploy` · **Status:** 🟡 in progress
+**Branch:** `feature/phase-7-docs-deploy` · **Status:** ✅ done (2026-09-20)
 
 ## Context — strategic pivot
 
@@ -45,9 +45,15 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
    allowed in free tier"`). Adopted the pre-authorized MiniLM fallback, served free via
    **server-side cloud inference** (`cloud_inference=True`, `models.Document`). Trade-off:
    lower dim + ~256-token input truncation; T6 eval quantifies the relevance impact.
-2. **LLM (generation + routing + grounding):** `gpt-4o-mini` on **Azure OpenAI** — keeps
-   the current client, least change. Azure OpenAI is retained for chat; embeddings move to
-   Qdrant.
+2. **LLM (generation + routing + grounding):** ~~`gpt-4o-mini`~~ → **`gpt-5-mini`** on
+   **Azure OpenAI** — keeps the current client, least change. Azure OpenAI is retained for
+   chat; embeddings move to Qdrant.
+   **Revised 2026-09-20 (P7-T8):** the original Azure subscription lapsed and its Foundry
+   resource was gone, so the stack was rebuilt on a fresh trial subscription. `gpt-4o-mini`
+   can no longer be deployed at all (`"has been deprecated since 03/31/2026"`), so
+   `gpt-5-mini` replaces it: $0.25/1M input, $2.00/1M output vs the old $0.15/$0.60 — about
+   $0.60/month at 200 questions. It rejects `temperature` values other than the default,
+   which is why `agent/llm.py` and `retrieval/issues.py` no longer pin `temperature=0.0`.
 3. **Cold start:** accept the free-host ~30–60s wake-up. The Phase 8 widget shows a
    "waking up" state; no keep-warm cron for now (can add later if it annoys).
 
@@ -88,13 +94,30 @@ proprietary Azure Foundry IQ KB, at a fraction of the cost.
     sections, and `.env.example` describe Qdrant + the cheap LLM + the free host; the
     build-vs-buy paragraph updated (buy = Qdrant managed vector store + free inference;
     build = chunking, LangGraph, issues tool). `docs/setup.md` covers Qdrant provisioning.
-- [ ] **P7-T8** — Containerize + deploy backend to Hugging Face Spaces.
-  - Commit: `chore(p7): deploy backend to hf spaces [P7-T8]`
-  - DoD: backend image builds and runs on HF Spaces (free); `/health` + `/ask` reachable at
-    a public URL with the dev machine off; secrets (Qdrant key, LLM key, `GITHUB_TOKEN`)
-    set via Space secrets, never in the image; **CORS allows the Hostinger domain**.
-    `docs/deploy.md` rewritten for the HF Spaces + Qdrant path (Azure path trimmed or kept
-    as an appendix).
+- [x] **P7-T8** — Containerize + deploy backend to **Azure Container Apps**.
+  - Commit: `chore(p7): deploy backend to azure container apps [P7-T8]`
+  - DoD: backend image builds and runs on Azure Container Apps (scale-to-zero); `/health` +
+    `/ask` reachable at a public URL with the dev machine off; secrets (Qdrant key, LLM key,
+    `GITHUB_TOKEN`) set as Container App secrets, never in the image; CORS config-driven.
+    `docs/deploy.md` rewritten for the Container Apps + Qdrant path (HF kept as appendix).
+  - **Done 2026-09-20.** Live at
+    `https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io`
+    — `/health` reports `ok` with `docs: 2146 · code: 941 · career: 22`; `/ask` returns a
+    grounded answer with 6 citations.
+  - **Deviations from the original plan** (all forced, all documented):
+    1. **Host changed.** HF Spaces now returns `402 Payment Required` for Docker Spaces —
+       PRO only. Moved to Azure Container Apps (scale-to-zero, free grant, existing
+       subscription). Image on Docker Hub, not ACR (~$5/mo flat).
+    2. **Azure rebuilt.** The original subscription had lapsed and taken the Foundry
+       resource with it; recreated on a fresh trial in Sweden Central.
+    3. **Model changed.** `gpt-4o-mini` is no longer deployable (deprecated 2026-03-31);
+       `gpt-5-mini` replaces it. See decision 2 above and the eval addendum.
+    4. **CORS still `*`** — the Hostinger domain is unknown until P8-T5 tightens it.
+  - **Carried into Phase 8 / follow-ups:**
+    - Azure trial expires ~2026-10-20; convert to pay-as-you-go or the app disappears.
+    - `GITHUB_TOKEN` in `.env` returns `401` — the public instance's live issues retriever
+      is broken until it is regenerated (portfolio instance unaffected).
+    - `/health` was still querying Azure AI Search after the P7-T4 migration; fixed here.
 
 ## Exit criteria
 

@@ -21,7 +21,10 @@ Inference, so no embedding model runs locally or in the deploy image.
 The agent's routing, generation, and grounding use one cheap chat model. (Embeddings no
 longer use Azure — they run in Qdrant.)
 
-- Create a **`gpt-4o-mini`** deployment → `AZURE_OPENAI_CHAT_DEPLOYMENT`.
+- Create a **`gpt-5-mini`** deployment → `AZURE_OPENAI_CHAT_DEPLOYMENT`.
+  (`gpt-4o-mini` was the original choice but Azure blocks new deployments of it:
+  "deprecated since 03/31/2026". Any current small chat model works; only the
+  deployment name in `.env` has to match.)
 - Resource endpoint → `AZURE_OPENAI_ENDPOINT`, key → `AZURE_OPENAI_API_KEY`, and set
   `AZURE_OPENAI_API_VERSION`.
 - `AZURE_OPENAI_EMBED_DEPLOYMENT` is unused on the Qdrant stack; leave it blank.

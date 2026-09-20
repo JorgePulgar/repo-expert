@@ -59,7 +59,7 @@ vector store; the agent is the brain.
                           ┌──────────────────────────────┐
                           │       Azure OpenAI (buy)     │
                           │  routing · generation ·      │
-                          │  grounding judge (gpt-4o-mini)│
+                          │  grounding judge (gpt-5-mini) │
                           └──────────────────────────────┘
 ```
 
@@ -193,6 +193,7 @@ and stays instance-agnostic. Active instance is chosen by `REPO_EXPERT_INSTANCE`
 ## 8. Tech stack
 
 Python 3.12 · uv · FastAPI · LangGraph · Qdrant Cloud (vector search + free server-side
-inference, `all-MiniLM-L6-v2`) · RRF fusion · Azure OpenAI `gpt-4o-mini` (routing +
-generation + grounding judge) · GitHub Search API. Deployed on Hugging Face Spaces (free).
+inference, `all-MiniLM-L6-v2`) · RRF fusion · Azure OpenAI `gpt-5-mini` (routing +
+generation + grounding judge) · GitHub Search API. Deployed on Azure Container Apps
+(scale-to-zero).
 See `README.md` for setup and run instructions.

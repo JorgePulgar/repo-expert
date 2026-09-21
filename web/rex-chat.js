@@ -84,6 +84,49 @@
       .replace(/'/g, "&#39;");
   }
 
+  /* Inline markdown, applied to text that is ALREADY escaped, so the result can only
+     contain the tags added here. Deliberately small — bold, italics and code are what
+     the model actually emits; supporting links or raw HTML would hand an LLM a way to
+     put arbitrary markup on the page. */
+  function renderInline(escaped) {
+    return escaped
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/g, "$1<em>$2</em>");
+  }
+
+  var BULLET = /^\s*[-*•]\s+/;
+  var NUMBERED = /^\s*\d+[.)]\s+/;
+
+  /* Render one blank-line-separated block as a list or a paragraph. The model answers
+     in markdown, and a wall of literal "- " lines reads as noise. */
+  function renderBlock(block) {
+    var lines = block.split("\n").filter(function (l) { return l.trim() !== ""; });
+    if (!lines.length) return "";
+
+    if (lines.every(function (l) { return BULLET.test(l); })) {
+      return "<ul>" + lines.map(function (l) {
+        return "<li>" + renderInline(l.replace(BULLET, "")) + "</li>";
+      }).join("") + "</ul>";
+    }
+    if (lines.every(function (l) { return NUMBERED.test(l); })) {
+      return "<ol>" + lines.map(function (l) {
+        return "<li>" + renderInline(l.replace(NUMBERED, "")) + "</li>";
+      }).join("") + "</ol>";
+    }
+
+    // A lead-in line followed by items ("En concreto:" then bullets) is common. Split
+    // it rather than forcing one shape on the whole block.
+    for (var i = 0; i < lines.length; i++) {
+      if (BULLET.test(lines[i]) || NUMBERED.test(lines[i])) {
+        if (i === 0) break;
+        return renderBlock(lines.slice(0, i).join("\n")) +
+          renderBlock(lines.slice(i).join("\n"));
+      }
+    }
+    return "<p>" + renderInline(lines.join("<br>")) + "</p>";
+  }
+
   /* Turn inline [n] markers into links to citations[n-1]. Markers with no matching
      citation are left as plain text rather than linking somewhere wrong. */
   function renderAnswer(answer, citations) {
@@ -96,10 +139,7 @@
         '" target="_blank" rel="noopener noreferrer" title="' +
         escapeHtml(citation.title || "") + '">' + digits + "</a>";
     });
-    return safe
-      .split(/\n{2,}/)
-      .map(function (block) { return "<p>" + block.replace(/\n/g, "<br>") + "</p>"; })
-      .join("");
+    return safe.split(/\n{2,}/).map(renderBlock).join("");
   }
 
   function citationLabel(citation) {
@@ -411,6 +451,6 @@
   /* Exposed for unit tests under `node --test`; `module` is undefined in a browser,
      so this is inert when the file is loaded with a <script> tag. */
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { escapeHtml: escapeHtml, renderAnswer: renderAnswer, citationLabel: citationLabel };
+    module.exports = { escapeHtml: escapeHtml, renderAnswer: renderAnswer, citationLabel: citationLabel, renderInline: renderInline };
   }
 })();

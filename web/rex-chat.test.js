@@ -7,7 +7,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 
-const { escapeHtml, renderAnswer, citationLabel } = require("./rex-chat.js");
+const { escapeHtml, renderAnswer, citationLabel, renderInline } = require("./rex-chat.js");
 
 test("escapeHtml neutralises markup", () => {
   assert.strictEqual(
@@ -62,4 +62,54 @@ test("citationLabel formats file and line range", () => {
     "Guía › Instalación"
   );
   assert.strictEqual(citationLabel({}), "");
+});
+
+// --- markdown rendering -------------------------------------------------------
+// The model answers in markdown. These run on already-escaped text, so the only
+// tags that can appear are the ones the renderer adds.
+
+test("bullet lines become a list", () => {
+  assert.strictEqual(
+    renderAnswer("- uno\n- dos\n- tres", []),
+    "<ul><li>uno</li><li>dos</li><li>tres</li></ul>"
+  );
+});
+
+test("numbered lines become an ordered list", () => {
+  assert.strictEqual(renderAnswer("1. uno\n2. dos", []), "<ol><li>uno</li><li>dos</li></ol>");
+});
+
+test("a lead-in line before a list stays a paragraph", () => {
+  assert.strictEqual(
+    renderAnswer("En concreto:\n- uno\n- dos", []),
+    "<p>En concreto:</p><ul><li>uno</li><li>dos</li></ul>"
+  );
+});
+
+test("bold, italics and code render", () => {
+  assert.strictEqual(renderInline("**x**"), "<strong>x</strong>");
+  assert.strictEqual(renderInline("`x`"), "<code>x</code>");
+  assert.strictEqual(renderInline("un *x* y"), "un <em>x</em> y");
+});
+
+test("a lone asterisk is not treated as emphasis", () => {
+  assert.strictEqual(renderInline("2 * 3 = 6"), "2 * 3 = 6");
+});
+
+test("markdown cannot smuggle HTML through the renderer", () => {
+  const html = renderAnswer("- <img src=x onerror=alert(1)>\n- **<script>**", []);
+  assert.ok(!html.includes("<img"), "img tag must not survive");
+  assert.ok(!html.includes("<script>"), "script tag must not survive");
+  assert.ok(html.includes("&lt;img"));
+});
+
+test("citations still link inside list items", () => {
+  const citations = [{ title: "README", url: "https://example.com/r" }];
+  const html = renderAnswer("- usa FastAPI [1]", citations);
+  assert.ok(html.startsWith("<ul><li>"));
+  assert.ok(html.includes('href="https://example.com/r"'));
+});
+
+test("plain prose keeps its shape", () => {
+  assert.strictEqual(renderAnswer("uno\n\ndos", []), "<p>uno</p><p>dos</p>");
 });

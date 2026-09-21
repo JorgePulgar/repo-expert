@@ -42,10 +42,40 @@ rationale matters more than the list, so each one says what broke.
 | **Gated query rewrite** | short, acronym-bearing and follow-up questions are rewritten into a self-contained question before embedding | "ML" does not embed near "machine learning". Rewriting *everything* made it worse — the expansion read like a keyword list and matched tables of contents — so it is gated |
 | **Conversation memory** | prior turns are replayed as chat turns; the client sends them back each request | `/ask` is stateless by design, so any replica can serve any turn and nothing is stored server-side |
 
-Measured effect on the portfolio set: **hit@6 0.8 → 1.0** (career 0.6 → 1.0). See
-[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full delta, including
-a caveat about which part of the faithfulness gain was a measurement fix rather than a
-quality gain.
+### What the fixes actually were
+
+The table above is the design. This is what each change cost and what it moved, because
+"we improved retrieval" is not a claim anyone can check.
+
+1. **English-only embeddings → multilingual.** Diagnosed by holding the index and the
+   fusion constant and changing only the language of the question: English returned 6/6
+   career chunks, Spanish 6/6 unrelated text. Swapped to `multilingual-e5-small` — same
+   384 dimensions, so the collection schema was untouched and only the vectors had to be
+   rebuilt — plus the `query:`/`passage:` prefixes that family is trained with.
+   **Career recall 0.6 → 1.0.**
+2. **RRF → proportional slots.** The first attempt, a per-collection weight multiplier,
+   failed its own test: scaling a collection down still leaves all of its hits ordered
+   behind the leader's, so the leader takes every slot. Replaced with largest-remainder
+   allocation over weights derived from the score spread *of that query* — necessary
+   because e5 similarities cluster in a ~0.78–0.88 band where raw ratios carry no signal.
+   A collection with nothing relevant now takes no slots at all.
+3. **Oversized sections → sentence-bounded splits.** Paragraph boundaries first, then
+   sentence ends, then word boundaries as a last resort for list items and table rows that
+   carry no punctuation; the heading is repeated on every piece and comes out of the
+   budget. **Career 22 → 56 chunks, longest 4952 → 899 chars, none over the cap.**
+4. **Corpus curation.** Excluded task specs and prompt templates. The exclusion also had
+   to be fixed to work at all: `fnmatch` lets `*` cross `/`, so `**/tasks/**` required a
+   slash before `tasks` and silently kept 1003 root-level chunks. Fixed in the matcher,
+   with tests. **Docs 2885 → 1691 chunks.**
+5. **Judge alignment.** The faithfulness judge retrieves its own evidence and was doing so
+   at `top=5` cropped to 700 chars while the generator used 12 chunks of 2400 — marking
+   correct answers unsupported because their evidence had been cropped away. An
+   intermediate run read **0.1** purely from this. The judge now sees the same breadth.
+
+Measured effect on the portfolio set: **hit@6 0.8 → 1.0** (career 0.6 → 1.0), faithfulness
+0.7 → 1.0. See [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full
+delta — including the caveat that item 5 is a measurement fix, not a quality gain, and
+should not be read as one.
 
 ### Abuse protection
 

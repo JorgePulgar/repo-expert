@@ -1,0 +1,213 @@
+/* Repo Expert chat client — scoped styles.
+ *
+ * Every class is prefixed `rex-` so the component can drop into an existing page
+ * without colliding with the host stylesheet. Colours come from CSS variables with
+ * fallbacks, so the host site can restyle by redefining them on `.rex-chat`:
+ *
+ *   .rex-chat { --rex-accent: #7c5cff; --rex-bg: #0d0d12; }
+ *
+ * No build step: this file is plain CSS, served from the host site.
+ */
+
+.rex-chat {
+  --rex-bg: var(--rex-bg, transparent);
+  --rex-surface: var(--rex-surface, rgba(127, 127, 127, 0.08));
+  --rex-surface-user: var(--rex-surface-user, rgba(124, 92, 255, 0.14));
+  --rex-border: var(--rex-border, rgba(127, 127, 127, 0.28));
+  --rex-text: var(--rex-text, inherit);
+  --rex-muted: var(--rex-muted, rgba(127, 127, 127, 0.95));
+  --rex-accent: var(--rex-accent, #7c5cff);
+  --rex-danger: var(--rex-danger, #e06a5f);
+  --rex-radius: var(--rex-radius, 12px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--rex-text);
+  font: inherit;
+}
+
+/* ---------- transcript ---------- */
+
+.rex-log {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 12rem;
+  max-height: min(60vh, 34rem);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scroll-behavior: smooth;
+}
+
+.rex-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.rex-msg-role {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rex-muted);
+}
+
+.rex-bubble {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--rex-border);
+  border-radius: var(--rex-radius);
+  background: var(--rex-surface);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.rex-msg-user .rex-bubble {
+  background: var(--rex-surface-user);
+}
+
+.rex-bubble p { margin: 0 0 0.65rem; }
+.rex-bubble p:last-child { margin-bottom: 0; }
+.rex-bubble ul { margin: 0.4rem 0; padding-left: 1.2rem; }
+
+/* Inline [n] citation markers rendered as superscript links. */
+.rex-cite-ref {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+  margin: 0 0.1em;
+  padding: 0 0.25em;
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--rex-accent);
+  background: color-mix(in srgb, var(--rex-accent) 14%, transparent);
+}
+
+.rex-cite-ref:hover,
+.rex-cite-ref:focus-visible { text-decoration: underline; }
+
+/* ---------- sources ---------- */
+
+.rex-sources {
+  margin-top: 0.4rem;
+  border-top: 1px dashed var(--rex-border);
+  padding-top: 0.6rem;
+}
+
+.rex-sources-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rex-muted);
+  margin-bottom: 0.4rem;
+}
+
+.rex-sources ol { margin: 0; padding-left: 1.4rem; }
+.rex-sources li { margin-bottom: 0.3rem; font-size: 0.9rem; }
+.rex-sources a { color: inherit; }
+.rex-source-meta { color: var(--rex-muted); font-size: 0.85em; }
+
+/* ---------- badges ---------- */
+
+.rex-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+
+.rex-badge {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--rex-border);
+  border-radius: 999px;
+  color: var(--rex-muted);
+}
+
+.rex-badge-warn { color: var(--rex-danger); border-color: var(--rex-danger); }
+
+/* ---------- starters ---------- */
+
+.rex-starters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.rex-starter {
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--rex-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.rex-starter:hover:not(:disabled) {
+  border-color: var(--rex-accent);
+  background: color-mix(in srgb, var(--rex-accent) 10%, transparent);
+}
+
+.rex-starter:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- composer ---------- */
+
+.rex-form { display: flex; gap: 0.5rem; align-items: flex-end; }
+
+.rex-input {
+  flex: 1;
+  font: inherit;
+  resize: none;
+  min-height: 2.9rem;
+  max-height: 9rem;
+  padding: 0.7rem 0.9rem;
+  color: inherit;
+  background: var(--rex-surface);
+  border: 1px solid var(--rex-border);
+  border-radius: var(--rex-radius);
+}
+
+.rex-input:focus-visible { outline: 2px solid var(--rex-accent); outline-offset: 1px; }
+
+.rex-send {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.7rem 1.2rem;
+  border: 0;
+  border-radius: var(--rex-radius);
+  background: var(--rex-accent);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.rex-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- status ---------- */
+
+.rex-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.3rem;
+  font-size: 0.85rem;
+  color: var(--rex-muted);
+}
+
+.rex-status-error { color: var(--rex-danger); }
+
+.rex-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid var(--rex-border);
+  border-top-color: var(--rex-accent);
+  border-radius: 50%;
+  animation: rex-spin 0.7s linear infinite;
+  flex: none;
+}
+
+@keyframes rex-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rex-spinner { animation-duration: 3s; }
+  .rex-log { scroll-behavior: auto; }
+}
+
+@media (max-width: 540px) {
+  .rex-form { flex-direction: column; align-items: stretch; }
+  .rex-send { width: 100%; }
+}

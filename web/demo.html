@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repo Expert — demo local del chat</title>
+<link rel="stylesheet" href="rex-chat.css">
+<style>
+  /* Demo-only chrome. The real page inherits the site's design system instead. */
+  body {
+    margin: 0;
+    padding: 2rem 1rem 4rem;
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #0d0d12;
+    color: #e8e8ef;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 0.3rem; }
+  .sub { color: #9b9bab; margin: 0 0 1.6rem; }
+  .note {
+    font-size: 0.88rem;
+    color: #9b9bab;
+    border-left: 2px solid #33333f;
+    padding-left: 0.9rem;
+    margin: 1.6rem 0;
+  }
+  code { background: #1a1a23; padding: 0.1rem 0.35rem; border-radius: 4px; }
+  #rex-chat { --rex-text: #e8e8ef; --rex-muted: #9b9bab; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Repo Expert — demo local</h1>
+  <p class="sub">Banco de pruebas del cliente de chat. La página real vive en el sitio.</p>
+
+  <div id="rex-chat"
+       data-api="https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io"></div>
+
+  <p class="note">
+    Sírvela por HTTP, no con <code>file://</code>: el origen <code>null</code> no está en
+    <code>CORS_ORIGINS</code>. Con un servidor local en el puerto 5500
+    (<code>python -m http.server 5500</code>) el origen sí está permitido.
+    Límite: 10 preguntas/hora por IP — la 11ª devuelve <code>429</code>.
+    Cada pregunta es independiente: la API no guarda historial de conversación.
+  </p>
+</main>
+<script src="rex-chat.js"></script>
+</body>
+</html>

@@ -107,8 +107,14 @@ def needs_rewrite(question: str, history: list[tuple[str, str]] | None = None) -
     text = (question or "").strip()
     if not text:
         return False
-    lowered = text.lower()
-    if history and any(hint in lowered for hint in _REFERENCE_HINTS):
+    # Inside a conversation, always rewrite. Trying to detect which follow-ups
+    # depend on earlier turns by looking for cue words failed in testing: "¿Y cuál
+    # de ellos fue para un cliente?" has no cue from the list, is long enough to
+    # look self-contained, and was searched literally — so it missed the client
+    # project it was asking about, and the next turn inherited the confusion.
+    # A rewrite of an already-self-contained question costs one cheap call and
+    # returns it close to unchanged.
+    if history:
         return True
     if len(text.split()) < _MIN_WORDS_WITHOUT_HELP:
         return True

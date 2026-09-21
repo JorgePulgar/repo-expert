@@ -25,7 +25,6 @@
   var DEFAULTS = {
     // The backend sleeps at zero replicas; a cold start takes a few seconds.
     wakingAfterMs: 4000,
-    rotateEveryMs: 6000,
     timeoutMs: 120000,
     historyTurns: 5,
     visibleSources: 3,
@@ -48,18 +47,9 @@
     assistant: "Repo Expert",
     thinking: "Buscando en el índice y redactando…",
     // Shown once, on the first slow request of the session: the container really
-    // is asleep. After that it is awake, so repeating it would be a lie — the
-    // later messages just keep the visitor company while the model writes.
+    // is asleep. After that it is awake, so repeating it would be a lie.
     waking: "Despertando el servidor (duerme cuando no se usa)…",
-    waiting: [
-      "No estoy roto, estoy pensando…",
-      "Leyendo mis propios repos, dame un segundo…",
-      "Buscando la cita exacta, no me gusta inventar…",
-      "Esto lo escribe un modelo pequeño y barato, ten paciencia…",
-      "Cruzando documentación, código y CV…",
-      "Prefiero tardar y citar que responder rápido y mentir…",
-      "Casi… prometo que hay una respuesta al final de esto."
-    ],
+    waitingAgain: "No estoy roto, estoy pensando…",
     sources: "Fuentes",
     noSources: "Sin fuentes citadas.",
     moreSources: function (n) { return "Ver las " + n + " fuentes ↓"; },
@@ -325,20 +315,10 @@
       setStatus(TEXT.thinking, { spinner: true });
 
       // First slow request of the session: the container is genuinely asleep.
-      // Afterwards it is awake, so rotate through lighter lines instead of
-      // repeating a message that is no longer true.
-      var messages = hasWokenUp
-        ? TEXT.waiting.slice()
-        : [TEXT.waking].concat(TEXT.waiting);
-      var messageIndex = 0;
-      var rotateTimer = null;
-
+      // Afterwards it is awake, so say something that is still true.
+      var slowMessage = hasWokenUp ? TEXT.waitingAgain : TEXT.waking;
       var wakingTimer = setTimeout(function () {
-        setStatus(messages[messageIndex], { spinner: true });
-        rotateTimer = setInterval(function () {
-          messageIndex = (messageIndex + 1) % messages.length;
-          setStatus(messages[messageIndex], { spinner: true });
-        }, DEFAULTS.rotateEveryMs);
+        setStatus(slowMessage, { spinner: true });
       }, DEFAULTS.wakingAfterMs);
 
       var controller = new AbortController();
@@ -380,7 +360,6 @@
         })
         .then(function () {
           clearTimeout(wakingTimer);
-          clearInterval(rotateTimer);
           clearTimeout(timeoutTimer);
           hasWokenUp = true;
           setBusy(false);

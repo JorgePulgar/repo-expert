@@ -42,7 +42,7 @@ def test_ask_happy_path(client, monkeypatch) -> None:
         grounded=True,
         fallback_used=False,
     )
-    monkeypatch.setattr(routes, "ask", lambda q: fake)
+    monkeypatch.setattr(routes, "ask", lambda q, history=None: fake)
     body = client.post("/ask", json={"question": "How do I query?"}).json()
     assert body["answer"] == "Use Query()."
     assert body["route"] == ["kb"] and body["grounded"] is True
@@ -54,7 +54,7 @@ def test_ask_validation_rejects_empty(client) -> None:
 
 
 def test_ask_upstream_error_returns_500(client, monkeypatch) -> None:
-    def _boom(q):
+    def _boom(q, history=None):
         raise RuntimeError("agent down")
 
     monkeypatch.setattr(routes, "ask", _boom)

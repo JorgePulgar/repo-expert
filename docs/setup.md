@@ -11,7 +11,7 @@ Inference, so no embedding model runs locally or in the deploy image.
 - Create a free cluster at <https://cloud.qdrant.io>.
 - Copy the cluster **URL** (REST, port `:6333`) → `QDRANT_URL`.
 - Create an API key → `QDRANT_API_KEY`.
-- Embedding model → `QDRANT_EMBED_MODEL`. Default `sentence-transformers/all-MiniLM-L6-v2`
+- Embedding model → `QDRANT_EMBED_MODEL`. Default `intfloat/multilingual-e5-small`
   (384-dim). **Note:** `mxbai-embed-large-v1` is *not* allowed on the free tier — confirm
   the "Cost: Free" label in **Console → Inference** before changing the model.
 - Collections are created by `uv run repo-expert provision` (config-driven names per

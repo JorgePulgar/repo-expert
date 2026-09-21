@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 
 from repo_expert.agent.agent import ask
+from repo_expert.agent.graph import _RETRIEVE_TOP
 from repo_expert.agent.llm import chat_json
 from repo_expert.config.instance import get_instance_config
 from repo_expert.eval.dataset import load_qa
@@ -25,17 +26,25 @@ _JUDGE_SYSTEM = (
 )
 
 
+# The judge must see at least what the generator saw. It retrieves independently —
+# that is the point of the check — but when the agent generated from 12 chunks of
+# 2400 chars while the judge looked at 5 of 700, honest answers were marked
+# unsupported simply because the evidence for them had been cropped away.
+# Faithfulness read 0.1 purely as an artefact of that mismatch.
+_EVIDENCE_CHARS = 2400
+
+
 def _evidence(route: list[str], retrievers: dict, question: str, top: int) -> str:
     chunks = []
     for src in route or ["kb"]:
         retriever = retrievers.get(src)
         if retriever:
             for i, r in enumerate(retriever(question, top=top), start=1):
-                chunks.append(f"[{i}] ({r.kind}) {r.content[:700]}")
+                chunks.append(f"[{i}] ({r.kind}) {r.content[:_EVIDENCE_CHARS]}")
     return "\n\n".join(chunks)
 
 
-def run_groundedness(instance: str | None = None, top: int = 5) -> dict:
+def run_groundedness(instance: str | None = None, top: int = _RETRIEVE_TOP) -> dict:
     """Run the groundedness eval; return aggregate + per-item judgments."""
     cfg = get_instance_config(instance)
     retrievers = get_retrievers(cfg)

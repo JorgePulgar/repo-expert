@@ -33,7 +33,8 @@ def test_chunk_to_point_embeds_server_side_and_carries_payload() -> None:
     assert isinstance(pt, models.PointStruct)
     # vector is a Document (embedded server-side at upsert), not a float list
     assert isinstance(pt.vector, models.Document)
-    assert pt.vector.text == "async def f(): ..."
+    # e5 embeds stored text on the "passage" side of its asymmetric prefixes.
+    assert pt.vector.text == "passage: async def f(): ..."
     # payload mirrors chunk metadata; vector field is excluded
     assert pt.payload["file_path"] == "f.py"
     assert pt.payload["source_kind"] == "code"

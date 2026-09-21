@@ -130,8 +130,8 @@ Reporte completo: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 > sí están actualizados.
 
 **Instancia portfolio** (n=10, preguntas de carrera + repos de portafolio, re-ejecutada el
-2026-09-20 con `gpt-5-mini`): **enrutamiento 1.0, relevancia hit@6 0.8 (carrera 0.6 ·
-mixto 1.0), fidelidad 0.7, fidelidad media 0.9**
+2026-09-21): **enrutamiento 1.0, relevancia hit@6 1.0 (carrera 1.0 · mixto 1.0),
+fidelidad 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Las preguntas fuera
 de tema son rechazadas por la barrera de alcance configurable. La nota de cambio de modelo
 más abajo explica por qué se movió la fidelidad.
@@ -147,7 +147,7 @@ más abajo explica por qué se movió la fidelidad.
   prosa se condensan a palabras clave porque la Search API de GitHub usa AND entre términos
   y no devuelve nada para prosa (0.0 → 1.0).
 - Una regresión: el recall de **carrera** en portfolio bajó 1.0 → 0.6 — el costo del modelo
-  de embeddings gratuito (`all-MiniLM-L6-v2`, 384-dim, ventana de ~256 tokens) que trunca las
+  de embeddings gratuito (`multilingual-e5-small`, 384-dim) y de dividir las secciones largas
   entradas de carrera más largas. Hay mitigaciones documentadas.
 - La fundamentación usa un juez LLM (gpt-5-mini), por lo que los puntajes tienen varianza
   entre ejecuciones. El juez ya no corre a `temperature=0` — gpt-5-mini solo acepta su

@@ -28,11 +28,17 @@ _DISTANCE = Distance.COSINE
 EMBED_DIMS: dict[str, int] = {
     "mixedbread-ai/mxbai-embed-large-v1": 1024,
     "sentence-transformers/all-MiniLM-L6-v2": 384,
+    # Multilingual, same 384 dimensions as MiniLM, permitted on the free tier
+    # (probed 2026-09-21). Current default: the corpus is English but the chat is
+    # answered in Spanish, and MiniLM is English-only.
+    "intfloat/multilingual-e5-small": 384,
 }
 
 # Payload fields filtered on at retrieval time (mirror AI Search filterable fields).
 _KEYWORD_FIELDS = ("source_kind", "repo_slug", "file_path")
-_INTEGER_FIELDS = ("start_line", "end_line")
+# ``seq`` is indexed so neighbour expansion can fetch a hit's adjacent chunks
+# (same file_path, seq in [n-r, n+r]) with a filter instead of a scan.
+_INTEGER_FIELDS = ("start_line", "end_line", "seq")
 
 
 def get_embedding_dim(model: str | None = None) -> int:

@@ -7,15 +7,16 @@
  *   <script src="rex-chat.js"></script>
  *
  * Contract (see repo-expert/src/repo_expert/api/schemas.py):
- *   POST /ask  {question}
+ *   POST /ask  {question, history: [{question, answer}, ...]}
  *     -> {answer, citations[], route[], grounded, fallback_used}
  *        citations[i] = {title, url, file_path?, section_path[], start_line?, end_line?}
  *        `answer` carries inline [n] markers, 1-based, into citations[n-1].
  *   GET /health -> liveness; NOT rate-limited, so it is safe as a warm-up ping.
  *
- * The API is single-turn: it accepts a question and nothing else. There is no
- * conversation history, so each question is answered independently. The UI keeps a
- * visible transcript but must not imply that follow-ups carry context.
+ * The service is stateless: it keeps no conversation, so this client owns the
+ * transcript and replays the recent turns with every question. That is what makes
+ * follow-ups like "explícame más del primero" work, and it means any replica can
+ * serve any turn.
  */
 
 (function () {
@@ -25,6 +26,7 @@
     // The backend sleeps at zero replicas; a cold start takes a few seconds.
     wakingAfterMs: 4000,
     timeoutMs: 120000,
+    historyTurns: 5,
     starters: [
       "¿Qué experiencia tiene Jorge con sistemas RAG?",
       "¿Qué proyectos ha construido?",
@@ -33,7 +35,12 @@
   };
 
   var TEXT = {
-    placeholder: "Pregunta sobre Jorge y sus proyectos…",
+    headLabel: "Chat en vivo",
+    headHint: "Pregunta aquí — debajo del chat explico cómo funciona y qué límites tiene.",
+    emptyTitle: "Pregúntame sobre la experiencia y los proyectos de Jorge.",
+    emptyBody: "Responde con citas que enlazan al documento exacto. Empieza por una de estas:",
+    startersLabel: "Prueba con",
+    placeholder: "Escribe tu pregunta…",
     send: "Enviar",
     you: "Tú",
     assistant: "Repo Expert",
@@ -124,18 +131,49 @@
       }
     }
 
+    /* A starter is either a plain string, or {q, short}. The short form is what
+       phones show: full questions are too wide to fit side by side, and a row
+       that scrolls sideways is not discoverable on a touch screen. */
+    starters = starters.map(function (s) {
+      if (typeof s === "string") return { q: s, short: s };
+      return { q: s.q || s.question || "", short: s.short || s.q || s.question || "" };
+    }).filter(function (s) { return s.q; });
+
     root.classList.add("rex-chat");
+
+    /* A header and an empty state, so the block reads as a chat within a second
+       rather than as loose sentences on the page. */
+    var head = el("div", "rex-head");
+    var headLabel = el("div", "rex-head-label");
+    headLabel.appendChild(el("span", "rex-dot"));
+    headLabel.appendChild(el("span", null, TEXT.headLabel));
+    head.appendChild(headLabel);
+    head.appendChild(el("div", "rex-head-hint", TEXT.headHint));
 
     var log = el("div", "rex-log");
     log.setAttribute("role", "log");
     log.setAttribute("aria-live", "polite");
     log.setAttribute("aria-label", "Conversación");
 
+    var empty = el("div", "rex-empty");
+    empty.appendChild(el("strong", null, TEXT.emptyTitle));
+    // Own class so very short viewports can drop the second line and keep the
+    // composer on screen.
+    empty.appendChild(el("span", "rex-empty-body", TEXT.emptyBody));
+    log.appendChild(empty);
+
+    var startersLabel = el("div", "rex-starters-label", TEXT.startersLabel);
     var starterBar = el("div", "rex-starters");
-    starters.forEach(function (question) {
-      var button = el("button", "rex-starter", question);
+    starters.forEach(function (starter) {
+      var button = el("button", "rex-starter");
       button.type = "button";
-      button.addEventListener("click", function () { submit(question); });
+      // Both labels ship; CSS shows one per breakpoint. aria-label keeps the full
+      // question for screen readers regardless of which is visible.
+      button.setAttribute("aria-label", starter.q);
+      button.setAttribute("title", starter.q);
+      button.appendChild(el("span", "rex-starter-long", starter.q));
+      button.appendChild(el("span", "rex-starter-short", starter.short));
+      button.addEventListener("click", function () { submit(starter.q); });
       starterBar.appendChild(button);
     });
 
@@ -152,12 +190,18 @@
     var status = el("div", "rex-status");
     status.setAttribute("aria-live", "polite");
 
+    root.appendChild(head);
     root.appendChild(log);
+    root.appendChild(startersLabel);
     root.appendChild(starterBar);
     root.appendChild(form);
     root.appendChild(status);
 
     var busy = false;
+    // The server keeps no session, so the client owns the conversation and sends
+    // the recent turns with every question. Capped to match the API's limit and to
+    // keep the prompt from crowding out retrieved sources.
+    var turns = [];
 
     function setBusy(value) {
       busy = value;
@@ -178,6 +222,7 @@
     }
 
     function addMessage(role, roleLabel) {
+      if (empty && empty.parentNode) empty.parentNode.removeChild(empty);
       var wrap = el("div", "rex-msg rex-msg-" + role);
       wrap.appendChild(el("div", "rex-msg-role", roleLabel));
       var bubble = el("div", "rex-bubble");
@@ -250,7 +295,10 @@
       fetch(api + "/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: question }),
+        body: JSON.stringify({
+          question: question,
+          history: turns.slice(-DEFAULTS.historyTurns)
+        }),
         signal: controller.signal
       })
         .then(function (response) {
@@ -267,6 +315,7 @@
         .then(function (data) {
           var bubble = addMessage("assistant", TEXT.assistant);
           bubble.innerHTML = renderAnswer(data.answer || "", data.citations);
+          turns.push({ question: question, answer: data.answer || "" });
           renderSources(bubble, data);
           log.scrollTop = log.scrollHeight;
           setStatus("");

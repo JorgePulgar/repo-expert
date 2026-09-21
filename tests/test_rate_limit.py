@@ -19,7 +19,7 @@ def client(monkeypatch):
     monkeypatch.setattr(
         routes,
         "ask",
-        lambda q: AnswerResult(answer="ok", citations=[], route=["kb"], grounded=True, fallback_used=False),
+        lambda q, history=None: AnswerResult(answer="ok", citations=[], route=["kb"], grounded=True, fallback_used=False),
     )
     app = create_app()
     yield TestClient(app, raise_server_exceptions=False)
@@ -70,7 +70,7 @@ def test_zero_disables_the_limiter(monkeypatch) -> None:
     monkeypatch.setattr(
         routes,
         "ask",
-        lambda q: AnswerResult(answer="ok", citations=[], route=["kb"], grounded=True, fallback_used=False),
+        lambda q, history=None: AnswerResult(answer="ok", citations=[], route=["kb"], grounded=True, fallback_used=False),
     )
     c = TestClient(create_app(), raise_server_exceptions=False)
     for _ in range(12):

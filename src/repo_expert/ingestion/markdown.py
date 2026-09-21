@@ -43,6 +43,94 @@ def _section_anchor(section_path: list[str], title: str, index: int) -> str:
     return f"intro-{index}"
 
 
+# The embedding model (MiniLM via Qdrant cloud inference) truncates its input at
+# ~256 tokens and says nothing. A section longer than that was being indexed only
+# up to the cut, so the tail was unsearchable: before this, 12 of the 22 career
+# sections (55%) overflowed, the largest at ~1200 tokens. Sections are therefore
+# split into pieces that fit, each carrying the heading so the embedding keeps its
+# topic and the citation keeps its context.
+_MAX_CHARS = 900          # ~230 tokens of Spanish/English prose, under the cap
+_MIN_TAIL_CHARS = 200     # avoid orphan slivers; merge them into the previous piece
+
+# Split on paragraph breaks first, then sentence ends — never mid-sentence.
+_PARA_BREAK = re.compile(r"\n\s*\n")
+_SENTENCE_END = re.compile(r"(?<=[.!?:;])\s+")
+
+
+def _split_on_words(text: str, max_chars: int) -> list[str]:
+    """Last-resort split of an oversized unit at word boundaries."""
+    if len(text) <= max_chars:
+        return [text]
+    out: list[str] = []
+    current = ""
+    for word in text.split(" "):
+        candidate = f"{current} {word}".strip() if current else word
+        if len(candidate) <= max_chars or not current:
+            current = candidate
+        else:
+            out.append(current)
+            current = word
+    if current:
+        out.append(current)
+    return out
+
+
+def _split_long_text(text: str, max_chars: int = _MAX_CHARS) -> list[str]:
+    """Split ``text`` into pieces of at most ``max_chars``, on natural boundaries.
+
+    Paragraphs are kept whole when they fit; oversized paragraphs fall back to
+    sentence boundaries, and a single sentence longer than the budget is emitted
+    as-is rather than cut mid-word (rare, and better than a broken fragment).
+    """
+    if len(text) <= max_chars:
+        return [text]
+
+    units: list[str] = []
+    for para in _PARA_BREAK.split(text):
+        para = para.strip()
+        if not para:
+            continue
+        if len(para) <= max_chars:
+            units.append(para)
+            continue
+        sentence = ""
+        for part in _SENTENCE_END.split(para):
+            # Markdown list items and table rows often carry no sentence punctuation,
+            # so a "sentence" can still blow the budget. Fall back to word boundaries
+            # rather than let the embedder truncate it silently.
+            for part in _split_on_words(part, max_chars):
+                candidate = f"{sentence} {part}".strip() if sentence else part
+                if len(candidate) <= max_chars:
+                    sentence = candidate
+                else:
+                    if sentence:
+                        units.append(sentence)
+                    sentence = part
+        if sentence:
+            units.append(sentence)
+
+    # Pack units back up to the budget so we emit as few pieces as possible.
+    pieces: list[str] = []
+    current = ""
+    for unit in units:
+        candidate = f"{current}\n\n{unit}" if current else unit
+        if len(candidate) <= max_chars:
+            current = candidate
+        else:
+            if current:
+                pieces.append(current)
+            current = unit
+    if current:
+        merged = f"{pieces[-1]}\n\n{current}" if pieces else ""
+        # Absorb an orphan tail into the previous piece, but only when the result
+        # still fits — otherwise the merge is what pushes the chunk over the cap.
+        if pieces and len(current) < _MIN_TAIL_CHARS and len(merged) <= max_chars:
+            pieces[-1] = merged
+        else:
+            pieces.append(current)
+    return pieces or [text]
+
+
 
 
 def chunk_markdown_file(
@@ -72,19 +160,28 @@ def chunk_markdown_file(
         count = seen_anchors.get(base, 0)
         anchor = base if count == 0 else f"{base}-{count}"
         seen_anchors[base] = count + 1
-        content = (f"{cur_title}\n\n{text}" if cur_title else text).strip()
-        chunks.append(
-            Chunk(
-                id=make_chunk_id(repo.slug, rel, anchor),
-                repo_slug=repo.slug,
-                source_kind="docs",
-                file_path=rel,
-                title=cur_title or rel,
-                content=content,
-                url=f"{base_url}#{anchor}" if cur_title else base_url,
-                section_path=list(cur_path),
+        # A section longer than the embedding window becomes several chunks. Each
+        # repeats the heading, so every piece embeds on-topic and cites in context.
+        # The heading is prepended afterwards, so it has to come out of the budget.
+        heading_cost = len(cur_title) + 2 if cur_title else 0
+        pieces = _split_long_text(text, max(_MAX_CHARS - heading_cost, 200))
+        for part_no, piece in enumerate(pieces):
+            content = (f"{cur_title}\n\n{piece}" if cur_title else piece).strip()
+            part_anchor = anchor if part_no == 0 else f"{anchor}--p{part_no}"
+            chunks.append(
+                Chunk(
+                    id=make_chunk_id(repo.slug, rel, part_anchor),
+                    repo_slug=repo.slug,
+                    source_kind="docs",
+                    file_path=rel,
+                    title=cur_title or rel,
+                    content=content,
+                    # The URL keeps the section anchor: every piece of a section
+                    # points a reader at that section, not at a synthetic fragment.
+                    url=f"{base_url}#{anchor}" if cur_title else base_url,
+                    section_path=list(cur_path),
+                )
             )
-        )
         idx += 1
 
     for line in lines:
@@ -106,7 +203,11 @@ def chunk_markdown_file(
         else:
             body.append(line)
     flush()
-    return [c for c in chunks if c.content]
+    kept = [c for c in chunks if c.content]
+    # Reading-order ordinal within the file, for neighbour expansion at query time.
+    for i, chunk in enumerate(kept):
+        chunk.seq = i
+    return kept
 
 
 def chunk_repo_markdown(

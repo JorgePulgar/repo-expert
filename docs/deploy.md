@@ -112,7 +112,7 @@ As plain **env vars**:
 | `AZURE_OPENAI_ENDPOINT`        | `https://<resource>.services.ai.azure.com`      |
 | `AZURE_OPENAI_API_VERSION`     | `2024-10-21`                                    |
 | `AZURE_OPENAI_CHAT_DEPLOYMENT` | `gpt-5-mini`                                    |
-| `QDRANT_EMBED_MODEL`           | `sentence-transformers/all-MiniLM-L6-v2`        |
+| `QDRANT_EMBED_MODEL`           | `intfloat/multilingual-e5-small`                |
 | `REPO_EXPERT_INSTANCE`         | `public` or `portfolio`                         |
 | `CORS_ORIGINS`                 | the site origin(s) allowed to call the API      |
 | `RATE_LIMIT_PER_HOUR`          | per-IP budget for `/ask` (default `10`, `0` disables) |

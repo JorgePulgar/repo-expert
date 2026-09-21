@@ -26,9 +26,18 @@ def _graph():
     return build_graph()
 
 
-def ask(question: str) -> AnswerResult:
-    """Answer a question about the active instance's repo, with citations."""
-    out = _graph().invoke({"question": question, "attempts": 0})
+def ask(
+    question: str, history: list[tuple[str, str]] | None = None
+) -> AnswerResult:
+    """Answer a question about the active instance's repo, with citations.
+
+    ``history`` is the prior ``(question, answer)`` turns of the same conversation,
+    oldest first. It lets the agent resolve follow-ups that are not self-contained
+    and keeps the service stateless: the client owns the conversation.
+    """
+    out = _graph().invoke(
+        {"question": question, "history": list(history or []), "attempts": 0}
+    )
     return AnswerResult(
         answer=out.get("answer", ""),
         citations=out.get("citations", []),

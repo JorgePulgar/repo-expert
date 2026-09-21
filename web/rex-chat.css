@@ -1,31 +1,74 @@
 /* Repo Expert chat client — scoped styles.
  *
  * Every class is prefixed `rex-` so the component can drop into an existing page
- * without colliding with the host stylesheet. Colours come from CSS variables with
- * fallbacks, so the host site can restyle by redefining them on `.rex-chat`:
+ * without colliding with the host stylesheet.
  *
- *   .rex-chat { --rex-accent: #7c5cff; --rex-bg: #0d0d12; }
+ * Theming: the defaults below read the host site's design tokens when they exist
+ * (--ink, --paper, --border, --green …) and fall back to concrete values otherwise,
+ * so the file also works standalone. A host can restyle by redefining the `--rex-*`
+ * variables in its own stylesheet, which wins by source order.
  *
- * No build step: this file is plain CSS, served from the host site.
+ * NOTE: never write `--rex-x: var(--rex-x, fallback)` — a custom property cannot fall
+ * back to itself. It resolves to guaranteed-invalid and every colour disappears.
+ *
+ * No build step: plain CSS, served from the host site.
  */
 
 .rex-chat {
-  --rex-bg: var(--rex-bg, transparent);
-  --rex-surface: var(--rex-surface, rgba(127, 127, 127, 0.08));
-  --rex-surface-user: var(--rex-surface-user, rgba(124, 92, 255, 0.14));
-  --rex-border: var(--rex-border, rgba(127, 127, 127, 0.28));
-  --rex-text: var(--rex-text, inherit);
-  --rex-muted: var(--rex-muted, rgba(127, 127, 127, 0.95));
-  --rex-accent: var(--rex-accent, #7c5cff);
-  --rex-danger: var(--rex-danger, #e06a5f);
-  --rex-radius: var(--rex-radius, 12px);
+  --rex-card: #ffffff;
+  --rex-surface: var(--paper-warm, #f2f1ec);
+  --rex-surface-user: var(--green-bg, rgb(221 238 227 / 80%));
+  --rex-border: var(--border, #a8a8a2);
+  --rex-text: var(--ink, #0f0f0e);
+  --rex-muted: var(--ink-muted, #5a5a56);
+  --rex-accent: var(--green, #2d6a4f);
+  --rex-danger: var(--alert, #b3261e);
+  --rex-mono: var(--mono, ui-monospace, monospace);
+  --rex-radius: 4px;
 
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.1rem;
+  padding: 1.75rem;
+  border: 0.5px solid var(--rex-border);
+  border-radius: var(--rex-radius);
+  background: var(--rex-card);
   color: var(--rex-text);
-  font: inherit;
+  box-shadow: 0 1px 2px rgb(15 15 14 / 4%), 0 8px 24px rgb(15 15 14 / 5%);
 }
+
+/* ---------- header: makes it unmistakably a chat ---------- */
+
+.rex-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 0.5px solid var(--rex-border);
+  padding-bottom: 0.9rem;
+}
+
+.rex-head-label {
+  font-family: var(--rex-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rex-accent);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rex-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--rex-accent);
+  flex: none;
+}
+
+.rex-head-hint { font-size: 0.8rem; color: var(--rex-muted); }
 
 /* ---------- transcript ---------- */
 
@@ -33,149 +76,196 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-height: 12rem;
-  max-height: min(60vh, 34rem);
+  min-height: 9rem;
+  max-height: min(58vh, 32rem);
   overflow-y: auto;
-  padding-right: 0.25rem;
   scroll-behavior: smooth;
 }
 
-.rex-msg {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  max-width: 100%;
+.rex-empty {
+  margin: auto 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--rex-muted);
+  font-size: 0.9rem;
+  border: 0.5px dashed var(--rex-border);
+  border-radius: var(--rex-radius);
+  background: var(--rex-surface);
 }
 
+.rex-empty strong {
+  display: block;
+  color: var(--rex-text);
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.rex-msg { display: flex; flex-direction: column; gap: 0.35rem; max-width: 100%; }
+
 .rex-msg-role {
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: var(--rex-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--rex-muted);
 }
 
+.rex-msg-user .rex-msg-role { color: var(--rex-accent); }
+
 .rex-bubble {
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--rex-border);
+  padding: 0.9rem 1.05rem;
+  border: 0.5px solid var(--rex-border);
   border-radius: var(--rex-radius);
   background: var(--rex-surface);
-  line-height: 1.6;
+  font-size: 0.9rem;
+  line-height: 1.7;
   overflow-wrap: anywhere;
 }
 
 .rex-msg-user .rex-bubble {
   background: var(--rex-surface-user);
+  border-color: rgba(45, 106, 79, 0.3);
 }
 
 .rex-bubble p { margin: 0 0 0.65rem; }
 .rex-bubble p:last-child { margin-bottom: 0; }
-.rex-bubble ul { margin: 0.4rem 0; padding-left: 1.2rem; }
 
 /* Inline [n] citation markers rendered as superscript links. */
 .rex-cite-ref {
-  font-size: 0.7em;
+  font-family: var(--rex-mono);
+  font-size: 0.68em;
   vertical-align: super;
   line-height: 0;
-  margin: 0 0.1em;
-  padding: 0 0.25em;
-  border-radius: 4px;
+  margin: 0 0.12em;
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
   text-decoration: none;
-  color: var(--rex-accent);
-  background: color-mix(in srgb, var(--rex-accent) 14%, transparent);
+  color: #fff;
+  background: var(--rex-accent);
 }
 
 .rex-cite-ref:hover,
-.rex-cite-ref:focus-visible { text-decoration: underline; }
+.rex-cite-ref:focus-visible { opacity: 0.8; }
 
 /* ---------- sources ---------- */
 
 .rex-sources {
-  margin-top: 0.4rem;
-  border-top: 1px dashed var(--rex-border);
-  padding-top: 0.6rem;
+  margin-top: 0.9rem;
+  border-top: 0.5px solid var(--rex-border);
+  padding-top: 0.7rem;
 }
 
 .rex-sources-title {
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: var(--rex-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--rex-muted);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
 }
 
-.rex-sources ol { margin: 0; padding-left: 1.4rem; }
-.rex-sources li { margin-bottom: 0.3rem; font-size: 0.9rem; }
-.rex-sources a { color: inherit; }
-.rex-source-meta { color: var(--rex-muted); font-size: 0.85em; }
+.rex-sources ol { margin: 0; padding-left: 1.3rem; }
+.rex-sources li { margin-bottom: 0.3rem; font-size: 0.82rem; }
+.rex-sources a { color: var(--rex-accent); }
+.rex-source-meta { color: var(--rex-muted); font-family: var(--rex-mono); font-size: 0.75rem; }
 
 /* ---------- badges ---------- */
 
-.rex-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.rex-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
 
 .rex-badge {
-  font-size: 0.72rem;
-  padding: 0.15rem 0.5rem;
-  border: 1px solid var(--rex-border);
-  border-radius: 999px;
+  font-family: var(--rex-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: 0.5px solid var(--rex-border);
+  border-radius: 2px;
   color: var(--rex-muted);
 }
 
-.rex-badge-warn { color: var(--rex-danger); border-color: var(--rex-danger); }
+.rex-badge-warn { color: var(--rex-danger); border-color: rgba(179, 38, 30, 0.4); }
 
 /* ---------- starters ---------- */
+
+.rex-starters-label {
+  font-family: var(--rex-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rex-muted);
+  margin-bottom: -0.4rem;
+}
 
 .rex-starters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
 .rex-starter {
-  font: inherit;
-  font-size: 0.88rem;
+  font-family: inherit;
+  font-size: 0.82rem;
   cursor: pointer;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid var(--rex-border);
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  padding: 0.5rem 0.85rem;
+  border: 0.5px solid var(--rex-border);
+  border-radius: 2px;
+  background: var(--rex-card);
+  color: var(--rex-text);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.rex-starter:hover:not(:disabled) {
+.rex-starter:hover:not(:disabled),
+.rex-starter:focus-visible:not(:disabled) {
   border-color: var(--rex-accent);
-  background: color-mix(in srgb, var(--rex-accent) 10%, transparent);
+  background: var(--rex-surface-user);
+  color: var(--rex-accent);
 }
 
 .rex-starter:disabled { opacity: 0.45; cursor: not-allowed; }
 
+/* Full question on wide screens, short label on phones. Both are in the DOM; the
+   button's aria-label always carries the full question. */
+.rex-starter-short { display: none; }
+
 /* ---------- composer ---------- */
 
-.rex-form { display: flex; gap: 0.5rem; align-items: flex-end; }
+.rex-form { display: flex; gap: 0.6rem; align-items: flex-end; }
 
 .rex-input {
   flex: 1;
-  font: inherit;
+  font-family: inherit;
+  font-size: 0.92rem;
   resize: none;
-  min-height: 2.9rem;
+  min-height: 3rem;
   max-height: 9rem;
-  padding: 0.7rem 0.9rem;
-  color: inherit;
-  background: var(--rex-surface);
-  border: 1px solid var(--rex-border);
+  padding: 0.8rem 0.95rem;
+  color: var(--rex-text);
+  background: var(--rex-card);
+  border: 0.5px solid var(--rex-border);
   border-radius: var(--rex-radius);
 }
 
-.rex-input:focus-visible { outline: 2px solid var(--rex-accent); outline-offset: 1px; }
+.rex-input::placeholder { color: var(--rex-muted); }
+
+.rex-input:focus-visible {
+  outline: none;
+  border-color: var(--rex-accent);
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.15);
+}
 
 .rex-send {
-  font: inherit;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  padding: 0.7rem 1.2rem;
-  border: 0;
+  padding: 0.85rem 1.5rem;
+  border: 0.5px solid var(--rex-accent);
   border-radius: var(--rex-radius);
   background: var(--rex-accent);
   color: #fff;
   white-space: nowrap;
+  transition: opacity 0.15s ease;
 }
 
-.rex-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.rex-send:hover:not(:disabled) { opacity: 0.88; }
+.rex-send:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ---------- status ---------- */
 
@@ -184,15 +274,15 @@
   align-items: center;
   gap: 0.5rem;
   min-height: 1.3rem;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--rex-muted);
 }
 
 .rex-status-error { color: var(--rex-danger); }
 
 .rex-spinner {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 0.8rem;
+  height: 0.8rem;
   border: 2px solid var(--rex-border);
   border-top-color: var(--rex-accent);
   border-radius: 50%;
@@ -207,7 +297,38 @@
   .rex-log { scroll-behavior: auto; }
 }
 
-@media (max-width: 540px) {
+/* Tablet / mobile. Vertical space is the scarce resource: the composer has to stay
+   on screen, so the starter chips scroll sideways on one line instead of wrapping
+   onto three, and the form stays a single row. */
+@media (max-width: 860px) {
+  .rex-chat { padding: 1.05rem; gap: 0.62rem; }
+  .rex-head { padding-bottom: 0.55rem; }
+  .rex-head-label { font-size: 0.6rem; }
+  .rex-head-hint { font-size: 0.75rem; }
+  .rex-log { min-height: 4.5rem; max-height: 42vh; }
+  .rex-empty { padding: 0.7rem; font-size: 0.82rem; }
+  .rex-starters-label { margin-bottom: -0.25rem; }
+  .rex-bubble { font-size: 0.86rem; padding: 0.75rem 0.85rem; }
+
+  .rex-starters { flex-wrap: wrap; gap: 0.4rem; }
+  .rex-starter { font-size: 0.76rem; padding: 0.4rem 0.6rem; }
+  .rex-starter-long { display: none; }
+  .rex-starter-short { display: inline; }
+
+  .rex-form { flex-direction: row; gap: 0.45rem; }
+  .rex-input { min-height: 2.75rem; padding: 0.65rem 0.75rem; font-size: 0.88rem; }
+  .rex-send { padding: 0.75rem 1rem; font-size: 0.85rem; }
+}
+
+/* Very narrow phones: a side-by-side composer would squeeze the input too far. */
+@media (max-width: 380px) {
   .rex-form { flex-direction: column; align-items: stretch; }
   .rex-send { width: 100%; }
+}
+
+/* Short desktop/laptop viewports: trade padding before trading content. */
+@media (max-height: 900px) and (min-width: 861px) {
+  .rex-chat { padding: 1.35rem 1.5rem; gap: 0.85rem; }
+  .rex-log { min-height: 6.5rem; max-height: 40vh; }
+  .rex-empty { padding: 1rem; }
 }

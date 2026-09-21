@@ -89,6 +89,7 @@ _PORTFOLIO_REPOS = [
     "Large-Codebases-AI-Layer",
     "OCR-and-ML-Pipeline-for-Menu-Predictions",
     "Rag-Assistants-Platform",
+    "sales-receptivity-cnn",
 ]
 
 PORTFOLIO = InstanceConfig(
@@ -112,6 +113,13 @@ PORTFOLIO = InstanceConfig(
     exclude_globs=[
         "**/node_modules/**", "**/.venv/**", "**/venv/**", "**/dist/**",
         "**/build/**", "**/.git/**", "**/tests/**", "**/test_*.py", "**/site-packages/**",
+        # Internal build artefacts, not portfolio documentation. They were 40% of
+        # the docs corpus (1003 task chunks + 161 prompt chunks of 2885) and they
+        # dominated retrieval: a question about Jorge's ML work returned a
+        # *fictional* job posting from a prompt template ("Machine Learning
+        # Engineer — NeuralForge (ficticio)"), and "what has he built" returned
+        # "Firma" and "Voz (innegociable)" from an email-writing prompt.
+        "**/prompts/**", "**/tasks/**", "**/.claude/**",
     ],
 )
 

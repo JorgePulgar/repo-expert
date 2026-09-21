@@ -30,6 +30,15 @@ _ROUTER_SYSTEM = (
 )
 
 
+# Enumeration questions ("what has he built?") need coverage, not just the closest
+# match: the career document devotes a section to each of eleven projects, so six
+# chunks could never list them. The snippet budget is wider than a chunk because
+# retrieval merges a hit with its neighbours; at 900 chars that extra context was
+# being cut straight back off.
+_RETRIEVE_TOP = 12
+_CONTEXT_LIMIT = 12
+_SNIPPET_CHARS = 2400
+
 # --- Nodes ---------------------------------------------------------------------
 
 def router_node(state: AgentState) -> AgentState:
@@ -47,16 +56,22 @@ def router_node(state: AgentState) -> AgentState:
 
 def retrieve_node(state: AgentState) -> AgentState:
     retrievers = get_retrievers(get_instance_config())
+    history = state.get("history") or []
     results = []
     for name in state.get("route", ["kb"]):
         retriever = retrievers.get(name)
-        if retriever:
-            results.extend(retriever(state["question"], top=6))
+        if not retriever:
+            continue
+        # A follow-up like "explícame más del primero" has nothing to retrieve on
+        # its own; the kb retriever resolves it against the history before
+        # embedding. Retrievers that do not take history (the live issues tool)
+        # keep their original signature.
+        try:
+            results.extend(retriever(state["question"], top=_RETRIEVE_TOP, history=history))
+        except TypeError:
+            results.extend(retriever(state["question"], top=_RETRIEVE_TOP))
     return {"results": results}
 
-
-_CONTEXT_LIMIT = 8
-_SNIPPET_CHARS = 900
 
 _GENERATE_SYSTEM = (
     "You are a precise codebase assistant. Answer the question using ONLY the "
@@ -90,6 +105,7 @@ def generate_node(state: AgentState) -> AgentState:
     answer = chat(
         system,
         f"Sources:\n{sources}\n\nQuestion: {state['question']}",
+        history=state.get("history") or [],
     )
     citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
     return {"draft": answer, "answer": answer, "citations": citations}

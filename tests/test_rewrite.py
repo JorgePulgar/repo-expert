@@ -32,10 +32,15 @@ def test_well_known_acronyms_do_not() -> None:
     assert not needs_rewrite("Como funciona el parser de PDF del proyecto de licitaciones?")
 
 
-def test_follow_ups_are_rewritten_only_with_history() -> None:
+def test_every_question_in_a_conversation_is_rewritten() -> None:
+    """Cue-word detection missed real follow-ups, so history alone is the trigger."""
     assert needs_rewrite("explicame mas del primero", [("q", "a")])
-    # Same words, no conversation: nothing to resolve against.
-    assert needs_rewrite("explicame mas del primero") is True  # short question rule
+    # No cue word, long enough to look self-contained - and yet it depends
+    # entirely on the previous turn. This one returned "no lo sé" in testing.
+    assert needs_rewrite("¿Y cuál de ellos fue para un cliente?", [("q", "a")])
+    # Even a self-contained question is rewritten inside a conversation; the cost
+    # is one cheap call and the rewrite comes back close to unchanged.
+    assert needs_rewrite("Que experiencia tiene Jorge con bases de datos?", [("q", "a")])
 
 
 # --- how the rewrite is handled -------------------------------------------------

@@ -48,8 +48,10 @@ _SYSTEM = (
     "'RAG' -> 'retrieval augmented generation'. Puedes mencionar ambas formas si "
     "encaja de forma natural.\n"
     "3. Si la pregunta depende de la conversación previa ('el primero', 'ese "
-    "proyecto', 'explícame más'), reescríbela nombrando explícitamente el sujeto "
-    "para que se entienda por sí sola.\n"
+    "proyecto', 'esto último', 'explícame más'), reescríbela nombrando "
+    "explícitamente el sujeto para que se entienda por sí sola. Las referencias "
+    "apuntan SIEMPRE a lo que dice el texto de la respuesta anterior, nunca a su "
+    "lista de fuentes ni a nombres de ficheros o funciones citados al final.\n"
     "4. Máximo 25 palabras. No inventes datos que no estén en la pregunta o el "
     "historial.\n"
     "5. Responde SOLO con la pregunta reescrita, sin comillas ni explicaciones."
@@ -72,6 +74,31 @@ _WELL_KNOWN_ACRONYMS = frozenset(
 # "¿Qué proyectos ha construido Jorge?" is five words and retrieves correctly —
 # rewriting it made things worse — so the bar sits under it deliberately.
 _MIN_WORDS_WITHOUT_HELP = 5
+
+
+_OLDER_ANSWER_CHARS = 600
+_LAST_ANSWER_CHARS = 2000
+
+
+def _trim_answer(answer: str, is_last: bool) -> str:
+    """Trim a past answer for the rewrite prompt, keeping what references need.
+
+    References like "esto último" or "el último que has dicho" point at the *end*
+    of the previous answer. Truncating from the front hid exactly that: asked
+    "cuéntame más de esto último", the rewriter had only seen the opening of a long
+    answer and resolved it against the last entry of the source list instead — so
+    the chat explained a demo script nobody had asked about.
+
+    The most recent answer therefore keeps its head *and* its tail; older turns,
+    which are only there for context, keep a prefix.
+    """
+    answer = answer.strip()
+    if not is_last:
+        return answer[:_OLDER_ANSWER_CHARS]
+    if len(answer) <= _LAST_ANSWER_CHARS:
+        return answer
+    half = _LAST_ANSWER_CHARS // 2
+    return f"{answer[:half]}\n[...]\n{answer[-half:]}"
 
 
 def _subject_hint() -> str:
@@ -139,10 +166,11 @@ def rewrite_query(question: str, history: list[tuple[str, str]] | None = None) -
     subject = _subject_hint()
     if subject:
         parts.append(subject)
-    for past_q, past_a in (history or [])[-_MAX_HISTORY_TURNS:]:
+    recent = (history or [])[-_MAX_HISTORY_TURNS:]
+    for position, (past_q, past_a) in enumerate(recent):
         parts.append(f"Usuario: {past_q}")
-        # The answer matters only for resolving references, so a prefix is enough.
-        parts.append(f"Asistente: {(past_a or '')[:600]}")
+        is_last = position == len(recent) - 1
+        parts.append(f"Asistente: {_trim_answer(past_a or '', is_last)}")
     parts.append(f"Pregunta actual: {question}")
 
     try:

@@ -165,6 +165,28 @@
 }
 
 .rex-sources ol { margin: 0; padding-left: 1.3rem; }
+
+.rex-sources-toggle {
+  font-family: var(--rex-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.55rem;
+  border: 0.5px solid var(--rex-border);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--rex-muted);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.rex-sources-toggle:hover,
+.rex-sources-toggle:focus-visible {
+  border-color: var(--rex-accent);
+  color: var(--rex-accent);
+}
+
 .rex-sources li { margin-bottom: 0.3rem; font-size: 0.82rem; }
 .rex-sources a { color: var(--rex-accent); }
 .rex-source-meta { color: var(--rex-muted); font-family: var(--rex-mono); font-size: 0.75rem; }
@@ -272,6 +294,7 @@
 .rex-status {
   display: flex;
   align-items: center;
+  line-height: 1.4;
   gap: 0.5rem;
   min-height: 1.3rem;
   font-size: 0.82rem;
@@ -281,13 +304,16 @@
 .rex-status-error { color: var(--rex-danger); }
 
 .rex-spinner {
-  width: 0.8rem;
-  height: 0.8rem;
-  border: 2px solid var(--rex-border);
+  width: 0.75rem;
+  height: 0.75rem;
+  box-sizing: border-box;
+  border: 1.5px solid var(--rex-border);
   border-top-color: var(--rex-accent);
   border-radius: 50%;
   animation: rex-spin 0.7s linear infinite;
   flex: none;
+  /* box-sizing keeps the ring inside its 12px box: without it the 2px border
+     pushed the circle out and it read as a clipped arc next to the text. */
 }
 
 @keyframes rex-spin { to { transform: rotate(360deg); } }

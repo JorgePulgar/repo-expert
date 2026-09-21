@@ -76,13 +76,21 @@ def retrieve_node(state: AgentState) -> AgentState:
 _GENERATE_SYSTEM = (
     "You are a precise codebase assistant. Answer the question using ONLY the "
     "numbered sources. Cite the sources you use inline as [n]. If the sources do "
-    "not contain the answer, say you don't know. Be concise and technical."
+    "not contain the answer, say you don't know. Be concise and technical.\n"
+    "Exception: questions about this conversation itself (what was asked earlier, "
+    "what you just said, summarise our exchange) are answered from the conversation "
+    "above, with no sources and no citations. Do not reply that you don't know "
+    "because the sources lack the conversation — you can see it."
 )
 
 _GROUNDING_SYSTEM = (
     "You verify whether an answer is fully supported by the provided sources. "
     "Reply as JSON {\"grounded\": true|false, \"reason\": \"...\"}. Mark false if the "
-    "answer makes any claim not backed by the sources."
+    "answer makes any claim not backed by the sources.\n"
+    "An answer about the conversation itself (recalling what the user asked, "
+    "summarising the exchange) is grounded by definition: it makes no claim about "
+    "the sources. Mark those true rather than sending the agent round the fallback "
+    "loop looking for evidence that could not exist."
 )
 
 

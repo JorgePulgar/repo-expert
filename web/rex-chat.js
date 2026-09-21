@@ -25,8 +25,10 @@
   var DEFAULTS = {
     // The backend sleeps at zero replicas; a cold start takes a few seconds.
     wakingAfterMs: 4000,
+    rotateEveryMs: 6000,
     timeoutMs: 120000,
     historyTurns: 5,
+    visibleSources: 3,
     starters: [
       "¿Qué experiencia tiene Jorge con sistemas RAG?",
       "¿Qué proyectos ha construido?",
@@ -45,9 +47,23 @@
     you: "Tú",
     assistant: "Repo Expert",
     thinking: "Buscando en el índice y redactando…",
+    // Shown once, on the first slow request of the session: the container really
+    // is asleep. After that it is awake, so repeating it would be a lie — the
+    // later messages just keep the visitor company while the model writes.
     waking: "Despertando el servidor (duerme cuando no se usa)…",
+    waiting: [
+      "No estoy roto, estoy pensando…",
+      "Leyendo mis propios repos, dame un segundo…",
+      "Buscando la cita exacta, no me gusta inventar…",
+      "Esto lo escribe un modelo pequeño y barato, ten paciencia…",
+      "Cruzando documentación, código y CV…",
+      "Prefiero tardar y citar que responder rápido y mentir…",
+      "Casi… prometo que hay una respuesta al final de esto."
+    ],
     sources: "Fuentes",
     noSources: "Sin fuentes citadas.",
+    moreSources: function (n) { return "Ver las " + n + " fuentes ↓"; },
+    fewerSources: "Ver menos ↑",
     ungrounded: "respuesta no verificada",
     fallback: "búsqueda ampliada",
     errorGeneric: "No he podido responder. Inténtalo de nuevo en unos segundos.",
@@ -198,6 +214,7 @@
     root.appendChild(status);
 
     var busy = false;
+    var hasWokenUp = false;   // the cold start only happens once per session
     // The server keeps no session, so the client owns the conversation and sends
     // the recent turns with every question. Capped to match the API's limit and to
     // keep the prompt from crowding out retrieved sources.
@@ -240,7 +257,8 @@
         box.appendChild(el("p", "rex-source-meta", TEXT.noSources));
       } else {
         var list = document.createElement("ol");
-        citations.forEach(function (citation) {
+        var hidden = [];
+        citations.forEach(function (citation, index) {
           var item = document.createElement("li");
           var link = el("a", null, citation.title || citation.url);
           link.href = citation.url;
@@ -252,9 +270,30 @@
             item.appendChild(document.createTextNode(" "));
             item.appendChild(el("span", "rex-source-meta", "— " + meta));
           }
+          // A dozen sources buries the answer above them. Show a few; the rest
+          // stay one click away, and the inline [n] links always work either way.
+          if (index >= DEFAULTS.visibleSources) {
+            item.hidden = true;
+            hidden.push(item);
+          }
           list.appendChild(item);
         });
         box.appendChild(list);
+
+        if (hidden.length) {
+          var toggle = el("button", "rex-sources-toggle", TEXT.moreSources(citations.length));
+          toggle.type = "button";
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.addEventListener("click", function () {
+            var expanded = toggle.getAttribute("aria-expanded") === "true";
+            hidden.forEach(function (item) { item.hidden = expanded; });
+            toggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+            toggle.textContent = expanded
+              ? TEXT.moreSources(citations.length)
+              : TEXT.fewerSources;
+          });
+          box.appendChild(toggle);
+        }
       }
 
       var badges = el("div", "rex-badges");
@@ -285,8 +324,21 @@
       setBusy(true);
       setStatus(TEXT.thinking, { spinner: true });
 
+      // First slow request of the session: the container is genuinely asleep.
+      // Afterwards it is awake, so rotate through lighter lines instead of
+      // repeating a message that is no longer true.
+      var messages = hasWokenUp
+        ? TEXT.waiting.slice()
+        : [TEXT.waking].concat(TEXT.waiting);
+      var messageIndex = 0;
+      var rotateTimer = null;
+
       var wakingTimer = setTimeout(function () {
-        setStatus(TEXT.waking, { spinner: true });
+        setStatus(messages[messageIndex], { spinner: true });
+        rotateTimer = setInterval(function () {
+          messageIndex = (messageIndex + 1) % messages.length;
+          setStatus(messages[messageIndex], { spinner: true });
+        }, DEFAULTS.rotateEveryMs);
       }, DEFAULTS.wakingAfterMs);
 
       var controller = new AbortController();
@@ -328,7 +380,9 @@
         })
         .then(function () {
           clearTimeout(wakingTimer);
+          clearInterval(rotateTimer);
           clearTimeout(timeoutTimer);
+          hasWokenUp = true;
           setBusy(false);
           input.focus();
         });

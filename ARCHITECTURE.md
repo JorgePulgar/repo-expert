@@ -179,9 +179,37 @@ and stays instance-agnostic. Active instance is chosen by `REPO_EXPERT_INSTANCE`
   when it proved English-only: the career document is English and the chat is used in
   Spanish, so Spanish questions could not reach it. e5 is multilingual at the same
   dimension, and takes `query:`/`passage:` prefixes.
-- **RRF over raw-score merge.** Code chunks score lower than prose on cosine for NL
-  queries; a global score sort starves them, so collections are fused by rank — lifted
-  code relevance 0.6 → 1.0 on the public eval.
+- **Rank-based fusion over a raw-score merge — then weighted.** Code chunks score lower
+  than prose on cosine for NL queries, so a global score sort starves them; fusing by rank
+  lifted code relevance 0.6 → 1.0 on the public eval. Plain RRF then over-corrected:
+  because it ranks only *within* a collection, every collection's #1 tied and the merged
+  list became a round-robin — a hard quota of 2 slots each at `top=6`, whatever the
+  question, so career questions spent four slots on repo code. Slots are now shared in
+  proportion to how well each collection matches, measured against the score spread
+  observed for that query (e5 similarities sit in a narrow ~0.78–0.88 band, so raw ratios
+  carry almost no signal).
+- **Chunks sized to the embedder, not to the document.** The model truncates its input
+  silently, so an oversized section is indexed only up to the cut: 12 of 22 career
+  sections overflowed, the largest by ~4× . Sections are split on sentence boundaries with
+  the heading repeated on each piece, which keeps the embedding on-topic and the citation
+  in context.
+- **Neighbours as context, not as sources.** A split section can leave an answer straddling
+  a boundary, so each hit is widened with `seq` ± 1. They are merged into the hit's own
+  text rather than appended as extra sources, which keeps the `[n]` markers the model
+  cites aligned with the citation list.
+- **Query rewriting, gated.** Short questions and acronyms retrieve badly ("ML" does not
+  embed near "machine learning"), and follow-ups are not self-contained. But rewriting
+  *every* question measurably hurt: the expansion read like a keyword list and matched
+  tables of contents. It now fires only for follow-ups, very short questions and
+  unfamiliar acronyms, and must return prose.
+- **Conversation state lives in the client.** `/ask` accepts prior turns and keeps nothing,
+  so any replica can serve any turn and there is no session store to operate. The history
+  is capped, and past answers trimmed, so a long conversation cannot crowd out the
+  retrieved sources.
+- **The public endpoint is rate-limited, not CORS-protected.** `/ask` is unauthenticated
+  and spends money on every call. CORS is enforced by browsers only — a script ignores it —
+  so the guard is a per-IP limit (10/hour) that rejects *before* any LLM call. `/health`
+  is exempt so the page can warm the scale-to-zero container for free.
 - **Issues query-rewrite.** The GitHub Search API ANDs terms and returns nothing for
   prose, so questions are condensed to keywords first — lifted issue relevance 0.0 → 1.0.
 - **Self-grounding over blind generation.** An independent LLM check gates answers; a

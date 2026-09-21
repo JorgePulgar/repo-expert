@@ -29,10 +29,39 @@ Un endpoint `/ask` de FastAPI entrega la pregunta a un agente **LangGraph** que
 enruta → recupera → genera con citas → autoverifica la fundamentación → reintenta con un
 fallback si la respuesta no está respaldada. La recuperación ejecuta **búsqueda vectorial
 sobre colecciones de Qdrant Cloud** construidas a partir de nuestro propio contenido con
-fragmentación personalizada, fusionadas entre docs/código/carrera con **Reciprocal Rank
-Fusion**. El agente es el dueño del razonamiento y de la fusión; el servicio gestionado es
-el dueño del almacenamiento vectorial + embeddings (build-vs-buy — ver
-[`ARCHITECTURE.md`](ARCHITECTURE.md)).
+fragmentación personalizada, fusionadas entre docs/código/carrera. El agente es el dueño
+del razonamiento y de la fusión; el servicio gestionado es el dueño del almacenamiento
+vectorial + embeddings (build-vs-buy — ver [`ARCHITECTURE.md`](ARCHITECTURE.md)).
+
+### El pipeline de recuperación, y por qué existe cada pieza
+
+Cada pieza responde a un fallo observado, no anticipado. Importa más el motivo que la
+lista, así que cada fila dice qué se rompió.
+
+| Paso | Qué hace | Por qué |
+|---|---|---|
+| **Fragmentación por secciones** | un chunk por encabezado markdown, con el encabezado repetido en cada trozo, y las secciones largas partidas por frases | el modelo de embeddings trunca a ~256 tokens **en silencio**; 12 de 22 secciones de carrera se pasaban y su cola era irrecuperable |
+| **Embeddings multilingües** | `intfloat/multilingual-e5-small`, con prefijos `query:`/`passage:` | el modelo anterior era solo inglés. El corpus está en inglés y las visitas preguntan en español: *"What projects has Jorge built?"* devolvía 6/6 fragmentos de carrera; la misma pregunta en español, 6/6 texto irrelevante |
+| **Fusión ponderada** | los huecos se reparten entre colecciones según lo bien que encaja cada una, medido sobre el rango de puntuaciones de esa consulta | el RRF clásico ordena *dentro* de cada colección, así que todos los #1 empataban y la mezcla se volvía una cuota fija: 2 de 6 huecos por colección, preguntara lo que preguntara |
+| **Expansión por vecinos** | cada acierto se amplía con los fragmentos contiguos (`seq` ± 1), fusionados en su propio texto | al partir secciones, una respuesta puede quedar a caballo entre dos; fusionar en vez de añadir mantiene la numeración `[n]` alineada con las citas |
+| **Reescritura de consulta, con criterio** | las preguntas cortas, con siglas o de seguimiento se reescriben como pregunta autosuficiente antes de embeber | "ML" no cae cerca de "machine learning". Reescribirlo *todo* empeoraba las cosas — la expansión parecía una lista de palabras clave y casaba con índices — por eso está condicionada |
+| **Memoria de conversación** | los turnos previos se reenvían como turnos de chat; el cliente los manda en cada petición | `/ask` es sin estado a propósito: cualquier réplica puede servir cualquier turno y no se guarda nada en el servidor |
+
+Efecto medido sobre el conjunto de portfolio: **hit@6 0.8 → 1.0** (carrera 0.6 → 1.0). El
+delta completo, con la advertencia sobre qué parte de la mejora de fidelidad fue un arreglo
+de medición y no de calidad, está en
+[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md).
+
+### Protección frente a abuso
+
+`/ask` no requiere autenticación y gasta dinero en cada llamada — tres viajes al LLM:
+enrutado, generación y juez de fundamentación. Está limitado a **10 preguntas por hora e
+IP**, devolviendo `429` con `Retry-After`, y se rechaza *antes* de llamar al LLM, así que
+una petición bloqueada no cuesta nada. `/health` está exento a propósito, para que la
+página pueda despertar gratis el contenedor.
+
+> **CORS no es la protección.** Solo lo aplican los navegadores; un script que llame al
+> endpoint directamente se lo salta. Lo que protege el crédito es el límite por IP.
 
 ## Qué conocimiento tiene — tres fuentes heterogéneas
 

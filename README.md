@@ -24,10 +24,39 @@ Scale-to-zero means the first request after an idle period takes a few seconds t
 A FastAPI `/ask` endpoint hands the question to a **LangGraph** agent that
 routes → retrieves → generates with citations → self-checks grounding → falls back and
 retries if the answer isn't supported. Retrieval runs **vector search over Qdrant Cloud**
-collections built from our own custom-chunked content, fused across docs/code/career with
-**Reciprocal Rank Fusion**. The agent owns the reasoning and the fusion; the managed
-service owns vector storage + embedding (build-vs-buy — see
-[`ARCHITECTURE.md`](ARCHITECTURE.md)).
+collections built from our own custom-chunked content, fused across docs/code/career. The
+agent owns the reasoning and the fusion; the managed service owns vector storage +
+embedding (build-vs-buy — see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
+
+### The retrieval pipeline, and why each part exists
+
+Every piece below was added to fix a failure that was observed, not anticipated. The
+rationale matters more than the list, so each one says what broke.
+
+| Step | What it does | Why |
+|---|---|---|
+| **Section chunking** | one chunk per markdown heading, heading repeated on every piece, long sections split on sentence boundaries | the embedding model truncates at ~256 tokens **silently**; 12 of 22 career sections overflowed and their tails were unsearchable |
+| **Multilingual embeddings** | `intfloat/multilingual-e5-small`, with `query:`/`passage:` prefixes | the previous model was English-only. The corpus is English, visitors ask in Spanish: *"What projects has Jorge built?"* returned 6/6 career chunks, the same question in Spanish returned 6/6 unrelated text |
+| **Weighted fusion** | slots shared between collections in proportion to how well each matches, measured against the score spread for that query | plain RRF ranks *within* a collection, so every collection's #1 tied and the merge became a fixed quota — 2 of 6 slots each, whatever was asked |
+| **Neighbour expansion** | a hit is widened with the chunks either side of it (`seq` ± 1), merged into its own text | splitting sections means an answer can straddle a boundary; merging rather than appending keeps the `[n]` numbering aligned with the citation list |
+| **Gated query rewrite** | short, acronym-bearing and follow-up questions are rewritten into a self-contained question before embedding | "ML" does not embed near "machine learning". Rewriting *everything* made it worse — the expansion read like a keyword list and matched tables of contents — so it is gated |
+| **Conversation memory** | prior turns are replayed as chat turns; the client sends them back each request | `/ask` is stateless by design, so any replica can serve any turn and nothing is stored server-side |
+
+Measured effect on the portfolio set: **hit@6 0.8 → 1.0** (career 0.6 → 1.0). See
+[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full delta, including
+a caveat about which part of the faithfulness gain was a measurement fix rather than a
+quality gain.
+
+### Abuse protection
+
+`/ask` is unauthenticated and spends money on every call — three LLM round trips: routing,
+generation, grounding judge. It is rate-limited to **10 questions per hour per IP**,
+returning `429` with `Retry-After`, rejected *before* any LLM call so a throttled request
+costs nothing. `/health` is deliberately exempt, so the chat page can warm the
+scale-to-zero container for free.
+
+> **CORS is not the protection here.** It is enforced by browsers only; a script calling
+> the endpoint directly ignores it. The rate limit is what guards the credit.
 
 ## What knowledge it has — three heterogeneous sources
 

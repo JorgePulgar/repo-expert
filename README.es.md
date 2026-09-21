@@ -47,10 +47,43 @@ lista, así que cada fila dice qué se rompió.
 | **Reescritura de consulta, con criterio** | las preguntas cortas, con siglas o de seguimiento se reescriben como pregunta autosuficiente antes de embeber | "ML" no cae cerca de "machine learning". Reescribirlo *todo* empeoraba las cosas — la expansión parecía una lista de palabras clave y casaba con índices — por eso está condicionada |
 | **Memoria de conversación** | los turnos previos se reenvían como turnos de chat; el cliente los manda en cada petición | `/ask` es sin estado a propósito: cualquier réplica puede servir cualquier turno y no se guarda nada en el servidor |
 
-Efecto medido sobre el conjunto de portfolio: **hit@6 0.8 → 1.0** (carrera 0.6 → 1.0). El
-delta completo, con la advertencia sobre qué parte de la mejora de fidelidad fue un arreglo
-de medición y no de calidad, está en
-[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md).
+### En qué consistió cada arreglo
+
+La tabla de arriba es el diseño. Esto es lo que costó cada cambio y qué movió, porque
+"mejoramos la recuperación" no es una afirmación que nadie pueda comprobar.
+
+1. **Embeddings solo-inglés → multilingües.** Diagnosticado dejando fijos el índice y la
+   fusión y cambiando solo el idioma de la pregunta: en inglés devolvía 6/6 fragmentos de
+   carrera, en español 6/6 texto irrelevante. Cambio a `multilingual-e5-small` — las mismas
+   384 dimensiones, así que el esquema de las colecciones no se tocó y solo hubo que
+   recalcular los vectores — más los prefijos `query:`/`passage:` con los que se entrena esa
+   familia. **Recuperación de carrera 0.6 → 1.0.**
+2. **RRF → reparto proporcional.** El primer intento, un multiplicador de peso por
+   colección, falló su propio test: escalar una colección hacia abajo deja igualmente todos
+   sus resultados por detrás de los del líder, que se queda con todos los huecos. Se
+   sustituyó por reparto por restos mayores sobre pesos derivados del rango de puntuaciones
+   *de esa consulta* — necesario porque las similitudes de e5 se agrupan en una banda de
+   ~0.78–0.88 donde los cocientes en bruto no dicen nada. Una colección sin nada relevante
+   ya no ocupa ningún hueco.
+3. **Secciones demasiado largas → cortes por frase.** Primero por párrafos, luego por final
+   de frase y, como último recurso, por palabras, para ítems de lista y filas de tabla que
+   no llevan puntuación; el encabezado se repite en cada trozo y se descuenta del
+   presupuesto. **Carrera 22 → 56 fragmentos, el mayor de 4952 a 899 caracteres, ninguno
+   por encima del límite.**
+4. **Curación del corpus.** Excluidos ficheros de tareas y plantillas de prompts. La
+   exclusión además no funcionaba: `fnmatch` deja que `*` cruce `/`, así que `**/tasks/**`
+   exigía una barra antes de `tasks` y se dejaba dentro 1003 fragmentos de la raíz.
+   Corregido en el comparador, con tests. **Docs 2885 → 1691 fragmentos.**
+5. **Alineación del juez.** El juez de fidelidad recupera su propia evidencia y seguía
+   haciéndolo con `top=5` recortado a 700 caracteres mientras el generador usaba 12
+   fragmentos de 2400 — marcaba como no fundamentadas respuestas correctas porque su
+   evidencia había quedado fuera. Una ejecución intermedia marcó **0.1** solo por esto. El
+   juez ve ahora la misma amplitud.
+
+Efecto medido sobre el conjunto de portfolio: **hit@6 0.8 → 1.0** (carrera 0.6 → 1.0),
+fidelidad 0.7 → 1.0. El delta completo está en
+[`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) — incluida la advertencia de
+que el punto 5 es un arreglo de medición y no de calidad, y no debe leerse como tal.
 
 ### Protección frente a abuso
 

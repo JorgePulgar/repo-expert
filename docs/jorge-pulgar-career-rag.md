@@ -10,7 +10,7 @@
 
 Jorge Pulgar is a Junior AI Engineer based in Madrid, Spain. He builds applied AI systems with a focus on Retrieval-Augmented Generation (RAG), LLM application development, and machine learning on the Azure stack. His work spans the full path from data and model to a working product: backend APIs (Python / FastAPI), frontends (React / TypeScript), and cloud AI services (Azure AI Foundry, Azure AI Search, Azure OpenAI, Azure Document Intelligence).
 
-He pairs hands-on engineering with four Microsoft Azure certifications and a strong, self-directed portfolio. His strengths are RAG architecture, retrieval quality, anti-hallucination / citation integrity, LLM integration, turning ML models into deployed demos, and shipping end-to-end. He is early in his career (one professional internship plus a real client capstone and an extensive independent portfolio), and he is honest about that level rather than inflating it.
+He pairs hands-on engineering with four Microsoft Azure certifications and a strong, self-directed portfolio. His strengths are RAG architecture, retrieval quality, anti-hallucination / citation integrity, LLM integration, turning ML models into deployed demos, and shipping end-to-end. He is currently a Data Engineer at Aldaba (paid internship, since August 2026), working with Azure Synapse pipelines and notebooks. He is early in his career (two professional internships plus a real client capstone and an extensive independent portfolio), and he is honest about that level rather than inflating it.
 
 Jorge works in Spanish day to day and writes all of his professional and technical materials in English (every repository is documented in English with bilingual READMEs). He is direct, gives and takes feedback well, and prefers concise communication.
 
@@ -26,6 +26,22 @@ Jorge is based in Madrid, Spain, and is open to Junior AI Engineer / AI Applicat
 ---
 
 ## Professional experience
+
+### Aldaba — Data Engineer (paid internship), Aug 2026 – present
+
+Jorge's current role. He works as a Data Engineer at Aldaba, on a paid internship
+that started in **August 2026 and is ongoing**.
+
+- **Role:** builds notebooks and pipelines in **Azure Synapse**; tests file uploads
+  through those pipelines; checks that the data arrives correctly in the monitoring
+  app the team built; fixes configurations and issues as they come up.
+- **Stack (recruiter language):** Azure Synapse; data pipelines; notebooks; data
+  ingestion and validation.
+- **Status:** this is Jorge's current position. Anyone asking where he works now, or
+  what he is doing at the moment, should be told about this role.
+
+> Deliberately limited: only what Jorge has confirmed as public. No client names,
+> project names or internal systems — do not infer or embellish beyond the above.
 
 ### Datarmony — AI Application Developer (Internship), Mar–Jun 2025
 

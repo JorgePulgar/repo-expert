@@ -120,9 +120,8 @@ Full report: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 > been re-run since the move to `gpt-5-mini`.** Re-running them needs a working
 > `GITHUB_TOKEN` for the live issues source; the portfolio numbers below are current.
 
-**Portfolio instance** (n=10, career + portfolio-repo questions, re-run 2026-09-20 on
-`gpt-5-mini`): **routing 1.0, relevance hit@6 0.8 (career 0.6 · mixed 1.0), faithfulness
-0.7, mean faithfulness 0.9**
+**Portfolio instance** (n=10, career + portfolio-repo questions, re-run 2026-09-21):
+**routing 1.0, relevance hit@6 1.0 (career 1.0 · mixed 1.0), faithfulness 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Off-topic questions
 are declined by the config-driven scope guardrail. See the model-change note below for why
 faithfulness moved.
@@ -135,17 +134,18 @@ faithfulness moved.
   global score sort starved them; fusing collections by rank fixes it.
 - Issues retrieval uses an **LLM query-rewrite**: prose questions are condensed to keywords
   because the GitHub Search API ANDs terms and returns nothing for prose (0.0 → 1.0).
-- One regression: portfolio **career recall** dropped 1.0 → 0.6 — the cost of the free-tier
-  embed model (`all-MiniLM-L6-v2`, 384-dim, ~256-token input window) truncating longer
-  career entries. Mitigations are documented.
+- The career-recall regression (1.0 → 0.6) recorded here since June is **fixed**: it was
+  never the token window, it was the language. `all-MiniLM-L6-v2` is English-only, the
+  career document is English and the chat is used in Spanish, so Spanish questions could
+  not reach it. `multilingual-e5-small` restores career recall to 1.0.
 - Groundedness uses an LLM judge (gpt-5-mini), so scores carry run-to-run variance. The
   judge no longer runs at `temperature=0` — gpt-5-mini only accepts its default — so
   variance is higher than in earlier runs.
-- **2026-09-20 model change:** `gpt-4o-mini` became undeployable on Azure (deprecated
-  2026-03-31), so the stack moved to `gpt-5-mini`. Retrieval is unchanged; portfolio
-  faithfulness reads 1.0 → 0.7, mostly because gpt-5-mini judges more strictly (two of the
-  three failures score 0.8–0.85). See
-  [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full delta.
+- **2026-09-21 retrieval overhaul:** multilingual embeddings, weighted fusion instead of a
+  fixed per-collection quota, section splitting, corpus curation and conversation memory.
+  Part of the faithfulness gain is a **measurement fix** — the judge had been retrieving
+  less evidence than the generator used. Full delta and caveat:
+  [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md).
 
 ## Documentation
 

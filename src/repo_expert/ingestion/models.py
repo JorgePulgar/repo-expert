@@ -24,6 +24,9 @@ class Chunk(BaseModel):
     section_path: list[str] = []
     start_line: int | None = None
     end_line: int | None = None
+    # Reading-order ordinal within its file. Lets retrieval pull a hit's neighbours
+    # (``seq`` ± 1) as extra context when an answer straddles two chunks.
+    seq: int | None = None
     vector: list[float] | None = None
 
 

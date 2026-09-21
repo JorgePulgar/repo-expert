@@ -1,6 +1,6 @@
 # Phase 8 — Chat page for the personal site (`/chat.html`)
 
-**Branch:** `feature/phase-8-chat-widget` · **Status:** ⬜ not started
+**Branch:** `feature/phase-8-chat-widget` · **Status:** 🟡 in progress
 
 ## Context
 
@@ -106,23 +106,50 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - Note: the counter is in-process, which is correct at `--max-replicas 1`. If the app is
     ever scaled out, each replica keeps its own counter and the effective limit becomes
     `limit × replicas` — move the state to Redis or the ingress at that point.
-- [ ] **P8-T1** — `rex-chat.js` + `rex-chat.css` scaffold + standalone demo page.
-  - Commit: `chore(p8): scaffold vanilla chat client [P8-T1]`
-  - DoD: opening the demo page renders an empty chat shell (messages area, input, send);
-    no build step; all classes `rex-` prefixed.
-- [ ] **P8-T2** — `/ask` client + configurable backend URL.
-  - Commit: `feat(p8): ask client with configurable backend url [P8-T2]`
-  - DoD: posts `{question}` to `/ask`; base URL configurable via a data attribute on the
-    mount div (never hard-coded); parses `AskResponse` (answer, citations, route, grounded).
-- [ ] **P8-T3** — Chat UI: input, answer render, citations as clickable links.
-  - Commit: `feat(p8): chat ui with citations [P8-T3]`
-  - DoD: ask → answer with clickable file/line (GitHub) and doc/url citations; conversation
-    scrollback; Spanish UI copy.
-- [ ] **P8-T4** — Cold-start, error, and discovery UX.
-  - Commit: `feat(p8): loading, waking-up, and error states [P8-T4]`
-  - DoD: `/health` warm-ping on load; "despertando el servidor…" state on cold start;
-    spinner on normal latency; friendly error on failure/timeout; **3 suggested starter
-    questions** so visitors know what the chat knows; optional route badge.
+- [x] **P8-T1** — `rex-chat.js` + `rex-chat.css` scaffold + standalone demo page.
+  **Done 2026-09-21** — `web/rex-chat.{js,css}` + `web/demo.html`. No build step, no
+  dependencies, every class `rex-` prefixed, colours via CSS variables the host page can
+  override.
+- [x] **P8-T2** — `/ask` client + configurable backend URL. **Done 2026-09-21.**
+  Base URL comes from `data-api` on the mount div; the file hard-codes nothing. Verified
+  against the live endpoint from `http://127.0.0.1:5500`: preflight `200` with
+  `access-control-allow-origin` echoed, POST `200`, 6 citations parsed.
+  **API is single-turn** — `AskRequest` accepts only `{question}`, so there is no
+  conversation history and the UI must not imply follow-ups carry context.
+- [x] **P8-T3** — Chat UI: input, answer render, citations as clickable links.
+  **Done 2026-09-21.** Inline `[n]` markers become superscript links into `citations[n-1]`;
+  a numbered source list shows title + `file_path` + line range; transcript scrollback;
+  Spanish copy; `role="log"` + `aria-live` for screen readers.
+  **Security:** answers are LLM output, so they are escaped before becoming HTML. Seven
+  `node --test` unit tests cover escaping, script-tag injection, a malicious citation URL,
+  and unmatched markers (left literal rather than linked somewhere wrong).
+- [x] **P8-T4** — Cold-start, error, and discovery UX. **Done 2026-09-21.**
+  `/health` warm-ping on load (exempt from the rate limit, so it is free); spinner
+  immediately, "despertando el servidor…" after 4s, 120s timeout via `AbortController`;
+  distinct messages for network failure, timeout, and **`429`** (reads `Retry-After` and
+  tells the visitor when to come back); 3 starter questions, overridable via
+  `data-starters`; badges for route, fallback, and an ungrounded answer.
+- [x] **P8-T6** — Retrieval quality overhaul. **Done 2026-09-21.**
+  - Commit: `feat(p8): multilingual retrieval, weighted fusion and chat memory [P8-T6]`
+  - Why: the deployed chat answered badly. "¿Qué proyectos ha construido Jorge?" named
+    two projects; "¿Tiene algún proyecto relacionado con ML?" answered with LicitAI (a
+    RAG project) rather than the ML ones; follow-ups were impossible.
+  - **Root cause: the embedding model was English-only.** `all-MiniLM-L6-v2` cannot
+    serve a Spanish question over an English career document. Same index, same fusion,
+    only the language changed: the English phrasing returned 6/6 career chunks, the
+    Spanish one 6/6 unrelated prompt templates. Now `intfloat/multilingual-e5-small`
+    (free-tier permitted, same 384 dims, `query:`/`passage:` prefixes).
+  - Also fixed: RRF had degenerated into a fixed 2-per-collection quota (now
+    proportional slots weighted by match); 55% of career chunks overflowed the embed
+    window (sections now split on sentence boundaries, heading repeated — LicitAI's
+    approach); 40% of the docs corpus was task specs and prompt templates (excluded);
+    `**/tasks/**` never matched at the repo root because `fnmatch` lets `*` cross `/`.
+  - Added conversation memory: `/ask` accepts prior turns, the widget sends the last 5.
+  - Eval: routing 1.0, hit@6 0.8 → **1.0** (career 0.6 → **1.0**), faithfulness 0.7 →
+    **1.0**. Part of the faithfulness gain is a measurement fix — the judge had been
+    retrieving less evidence than the generator used; see the addendum in
+    `docs/eval-qdrant-vs-azure.md`.
+  - Corpus: 2694 chunks (1691 docs · 947 code · 56 career), `sales-receptivity-cnn` added.
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

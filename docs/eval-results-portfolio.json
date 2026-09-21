@@ -1,13 +1,13 @@
 {
   "instance": "portfolio",
   "repo": "JorgePulgar/ai-invoice-analyzer",
-  "generated_at": "2026-09-20T20:19:20+00:00",
+  "generated_at": "2026-09-21T16:05:33+00:00",
   "relevance": {
     "n": 10,
     "routing_accuracy": 1.0,
-    "relevance_hit_at_k": 0.8,
+    "relevance_hit_at_k": 1.0,
     "relevance_by_kind": {
-      "career": 0.6,
+      "career": 1.0,
       "mixed": 1.0
     },
     "top_k": 6,
@@ -21,7 +21,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "career-azure-search-projects",
@@ -32,7 +32,7 @@
           "kb"
         ],
         "routing_ok": true,
-        "relevant": false
+        "relevant": true
       },
       {
         "id": "career-certifications",
@@ -126,8 +126,8 @@
   },
   "groundedness": {
     "n": 10,
-    "faithfulness_rate": 0.7,
-    "mean_faithfulness_score": 0.9,
+    "faithfulness_rate": 1.0,
+    "mean_faithfulness_score": 1.0,
     "self_grounded_rate": 1.0,
     "items": [
       {
@@ -153,8 +153,8 @@
       },
       {
         "id": "career-datarmony",
-        "faithful": false,
-        "score": 0.85,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
         "fallback_used": false
       },
@@ -177,7 +177,7 @@
         "faithful": true,
         "score": 1.0,
         "self_grounded": true,
-        "fallback_used": true
+        "fallback_used": false
       },
       {
         "id": "repo-fraud-autoencoder",
@@ -188,15 +188,15 @@
       },
       {
         "id": "repo-clarity-bank",
-        "faithful": false,
-        "score": 0.35,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
         "fallback_used": false
       },
       {
         "id": "repo-invoice-analyzer",
-        "faithful": false,
-        "score": 0.8,
+        "faithful": true,
+        "score": 1.0,
         "self_grounded": true,
         "fallback_used": false
       }

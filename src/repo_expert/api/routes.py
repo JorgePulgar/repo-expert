@@ -54,5 +54,6 @@ def ask_endpoint(request: AskRequest) -> AskResponse:
     Rate-limited per IP; `/health` deliberately is not, so the chat page can send a
     warm-up ping on load without spending part of a visitor's budget.
     """
-    result = ask(request.question)
+    history = [(t.question, t.answer) for t in request.history]
+    result = ask(request.question, history=history)
     return AskResponse(**result.model_dump())

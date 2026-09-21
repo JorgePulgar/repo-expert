@@ -48,10 +48,13 @@ class Settings(BaseSettings):
     # --- Qdrant (retrieval backend; optional until the migration lands) ---
     qdrant_url: str | None = Field(None, alias="QDRANT_URL")
     qdrant_api_key: str | None = Field(None, alias="QDRANT_API_KEY")
-    # mxbai-embed-large-v1 is blocked on the Qdrant free tier (P7-T2 gate, 2026-06-17);
-    # MiniLM (384-dim) is the pre-authorized fallback served free via cloud inference.
+    # Multilingual, 384-dim, free-tier permitted. all-MiniLM-L6-v2 was used until
+    # 2026-09-21 but is English-only: Spanish questions could not reach the English
+    # career document, and landed on unrelated Spanish text instead. e5 keeps the
+    # dimension, so only the vectors had to be rebuilt. e5 needs "query:"/"passage:"
+    # prefixes - see ingestion/qdrant_embed.py.
     qdrant_embed_model: str = Field(
-        "sentence-transformers/all-MiniLM-L6-v2", alias="QDRANT_EMBED_MODEL"
+        "intfloat/multilingual-e5-small", alias="QDRANT_EMBED_MODEL"
     )
 
     # --- GitHub (optional; required only by the issues/PRs retriever) ---

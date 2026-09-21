@@ -12,10 +12,14 @@ class AgentState(TypedDict, total=False):
 
     ``route`` is the list of source names to query (e.g. ["kb"], ["issues"],
     ["kb", "issues"]). ``attempts`` counts corrective loops. ``grounded`` records
-    whether the latest draft passed the grounding check.
+    whether the latest draft passed the grounding check. ``history`` carries the
+    earlier turns so follow-ups ("explícame más del primero") can be resolved.
     """
 
     question: str
+    # Prior (question, answer) turns, oldest first. The API is otherwise
+    # stateless: the client sends the conversation back with each request.
+    history: list[tuple[str, str]]
     route: list[str]
     results: list[RetrievalResult]
     draft: str

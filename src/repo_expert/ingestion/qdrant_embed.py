@@ -6,14 +6,27 @@ managed (free-tier) inference service produces the embedding. No vectors are
 computed in our process, so there is no embedding-model download in the deploy
 image and no Azure OpenAI embedding call on the Qdrant path.
 
-Model: ``sentence-transformers/all-MiniLM-L6-v2`` (384-dim). The richer
-``mxbai-embed-large-v1`` (1024-dim) is **not permitted on the Qdrant free tier**
-(verified 2026-06-17, P7-T2 gate), so we use the pre-authorized MiniLM fallback.
-MiniLM truncates inputs to ~256 tokens server-side; oversized code/doc chunks lose
-their tail, which T6 eval will quantify.
+Model: ``intfloat/multilingual-e5-small`` (384-dim), permitted on the free tier
+(probed 2026-09-21).
 
-Batching and retry now live where the network call happens: at **upsert** (T3,
-batched ``PointStruct`` lists) and **query** (T4), handled by ``qdrant-client``.
+**Why multilingual.** The previous model, ``all-MiniLM-L6-v2``, is English-only,
+and it showed: the career document is written in English while the chat page and
+its visitors are Spanish, so a Spanish question could not reach it. Measured on the
+same index, same fusion — only the language of the question changed:
+
+    "What projects has Jorge built?"      -> 6/6 career chunks (correct)
+    "¿Qué proyectos ha construido Jorge?" -> 6/6 unrelated Spanish prompt templates
+
+e5 keeps the 384 dimensions, so the collections' schema is unchanged; only the
+vectors have to be rebuilt.
+
+**Prefixes matter.** The e5 family is trained with asymmetric prefixes: stored text
+must be embedded as ``passage: <text>`` and searches as ``query: <text>``. Using the
+wrong one, or none, measurably degrades retrieval, so the two cases are separate
+functions rather than one shared helper.
+
+Both models truncate long inputs server-side (~512 tokens for e5), which is why the
+markdown chunker splits oversized sections instead of relying on the model.
 """
 
 from __future__ import annotations
@@ -23,7 +36,10 @@ from qdrant_client import models
 from repo_expert.config.settings import get_settings
 from repo_expert.ingestion.qdrant_collections import get_embedding_dim
 
-__all__ = ["embed_model", "as_document", "get_embedding_dim"]
+__all__ = ["embed_model", "as_document", "as_query", "get_embedding_dim"]
+
+# Model families that expect "passage:"/"query:" prefixes on their inputs.
+_PREFIXED_FAMILIES = ("e5",)
 
 
 def embed_model() -> str:
@@ -31,9 +47,20 @@ def embed_model() -> str:
     return get_settings().qdrant_embed_model
 
 
-def as_document(text: str) -> models.Document:
-    """Wrap text for server-side embedding by Qdrant Cloud Inference.
+def _needs_prefix(model: str) -> bool:
+    name = model.rsplit("/", 1)[-1].lower()
+    return any(fam in name for fam in _PREFIXED_FAMILIES)
 
-    Used both as a point ``vector`` at upsert and as a ``query`` at search time.
-    """
-    return models.Document(text=text, model=embed_model())
+
+def as_document(text: str) -> models.Document:
+    """Wrap stored text for server-side embedding (the ``passage`` side)."""
+    model = embed_model()
+    body = f"passage: {text}" if _needs_prefix(model) else text
+    return models.Document(text=body, model=model)
+
+
+def as_query(text: str) -> models.Document:
+    """Wrap a search string for server-side embedding (the ``query`` side)."""
+    model = embed_model()
+    body = f"query: {text}" if _needs_prefix(model) else text
+    return models.Document(text=body, model=model)

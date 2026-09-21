@@ -95,3 +95,74 @@ deployable, so there is no way to reproduce the old baseline.
 (`"Only the default (1) value is supported"`), so the previous `temperature=0.0` pinning is
 gone from `agent/llm.py` and `retrieval/issues.py`. Run-to-run variance is therefore higher
 than in the gpt-4o-mini runs.
+
+---
+
+## Addendum — 2026-09-21: retrieval overhaul (multilingual embeddings, fusion, memory)
+
+Prompted by the chat answering badly in production: "¿Qué proyectos ha construido
+Jorge?" named two projects, "¿Tiene algún proyecto relacionado con ML?" answered
+with LicitAI (a RAG project) instead of the ML ones, and follow-ups were impossible.
+
+Portfolio instance, same 10-question set:
+
+| Metric | 2026-09-20 | 2026-09-21 | Δ |
+| --- | --- | --- | --- |
+| Routing accuracy | 1.0 | 1.0 | — |
+| Relevance hit@6 | 0.8 | **1.0** | ▲ +0.2 |
+| ↳ career | 0.6 | **1.0** | ▲ +0.4 |
+| Faithfulness rate (judge) | 0.7 | **1.0** | ▲ +0.3 |
+| Mean faithfulness | 0.9 | **1.0** | ▲ +0.1 |
+
+### What changed, and which change did the work
+
+1. **The embedding model was English-only.** `all-MiniLM-L6-v2` cannot serve a
+   Spanish question over an English career document. Measured on the same index,
+   same fusion — only the language of the question changed:
+
+   * `"What projects has Jorge built?"` → 6/6 career chunks (correct)
+   * `"¿Qué proyectos ha construido Jorge?"` → 6/6 unrelated Spanish prompt templates
+
+   Replaced with `intfloat/multilingual-e5-small`: multilingual, free-tier
+   permitted, same 384 dimensions, `query:`/`passage:` prefixes. **This was the
+   root cause**; the career regression documented above (1.0 → 0.6) was never
+   really about MiniLM's token window — it was about its language.
+
+2. **Fusion was a quota, not a ranking.** Plain RRF scores by rank *within* a
+   collection, so every collection's #1 tied and the merged list was a round-robin:
+   with `top=6` and three collections, exactly 2 from each, whatever was asked.
+   Four of six slots went to repo code and docs on career questions. Replaced with
+   proportional slot allocation weighted by how well each collection matches,
+   measured against the spread observed for that query.
+
+3. **Long sections were truncated at embed time.** 12 of 22 career chunks (55%)
+   exceeded the model's input window, the largest at ~1200 tokens, so their tails
+   were unsearchable. The markdown chunker now splits sections on sentence
+   boundaries, repeating the heading on each piece (the approach used in LicitAI).
+   Career: 22 → 56 chunks, longest 4952 → 899 chars, none over the cap.
+
+4. **40% of the docs corpus was internal noise.** 1003 task-spec chunks and 161
+   prompt-template chunks, which is where "Firma", "Voz (innegociable)" and a
+   *fictional* job posting ("Machine Learning Engineer — NeuralForge") were coming
+   from. Now excluded; docs 2885 → 1691, total corpus 2694.
+
+5. **Query rewrite, then gated.** Expanding every question made things worse — the
+   expansion read like a keyword list and matched tables of contents. It now fires
+   only for follow-ups, very short questions and unfamiliar acronyms, and must
+   return prose.
+
+6. **Conversation memory.** `/ask` accepts prior turns, replayed as chat turns.
+   "Explícame más sobre el primero" now resolves against the previous answer.
+
+### Caveat on the faithfulness number
+
+Part of that 0.7 → 1.0 is a **measurement fix, not a model improvement**. The judge
+retrieves its own evidence; it was doing so at `top=5` with each chunk cropped to
+700 characters, while the generator had been raised to 12 chunks of 2400. Answers
+were being marked unsupported because the text supporting them had been cropped out
+of the judge's view — an intermediate run read **0.1** for exactly this reason. The
+judge now sees the same breadth the generator did.
+
+The retrieval numbers (routing, hit@6) are unaffected by that and improved on their
+own. Read the faithfulness figure as "no longer measured unfairly" rather than as a
+threefold quality gain.

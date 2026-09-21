@@ -174,8 +174,11 @@ and stays instance-agnostic. Active instance is chosen by `REPO_EXPERT_INSTANCE`
   (routing, RRF fusion, fallback, grounding) stays in our code so it is demonstrably *ours*.
 - **Server-side embeddings (free tier).** Chunks/queries are sent as `models.Document` and
   embedded by Qdrant Cloud Inference, so no embedding model runs in our process or image.
-  The free tier serves `all-MiniLM-L6-v2` (384-dim); the richer `mxbai-embed-large-v1` is
-  not permitted on the free tier (P7-T2 gate), so MiniLM is the accepted fallback.
+  The free tier serves `intfloat/multilingual-e5-small` (384-dim). `mxbai-embed-large-v1`
+  is not permitted (P7-T2 gate). `all-MiniLM-L6-v2` was the fallback until 2026-09-21,
+  when it proved English-only: the career document is English and the chat is used in
+  Spanish, so Spanish questions could not reach it. e5 is multilingual at the same
+  dimension, and takes `query:`/`passage:` prefixes.
 - **RRF over raw-score merge.** Code chunks score lower than prose on cosine for NL
   queries; a global score sort starves them, so collections are fused by rank — lifted
   code relevance 0.6 → 1.0 on the public eval.
@@ -193,7 +196,7 @@ and stays instance-agnostic. Active instance is chosen by `REPO_EXPERT_INSTANCE`
 ## 8. Tech stack
 
 Python 3.12 · uv · FastAPI · LangGraph · Qdrant Cloud (vector search + free server-side
-inference, `all-MiniLM-L6-v2`) · RRF fusion · Azure OpenAI `gpt-5-mini` (routing +
+inference, `multilingual-e5-small`) · weighted fusion · Azure OpenAI `gpt-5-mini` (routing +
 generation + grounding judge) · GitHub Search API. Deployed on Azure Container Apps
 (scale-to-zero).
 See `README.md` for setup and run instructions.

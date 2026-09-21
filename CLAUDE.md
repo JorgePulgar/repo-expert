@@ -64,7 +64,8 @@ Designed in Phase 1, honored everywhere after.
 ## Stack & tooling
 - **Python** 3.12, dependency manager **uv** (`uv add`, `uv run`, `uv.lock` committed).
 - Retrieval backend: **Qdrant Cloud** (free tier) — vector search + free server-side
-  inference (`all-MiniLM-L6-v2`, 384-dim) over custom-built collections. RRF fusion in our code.
+  inference (`multilingual-e5-small`, 384-dim) over custom-built collections. Weighted
+  rank fusion in our code (proportional slots, not a fixed quota per collection).
 - Orchestration: LangGraph (the CV-relevant piece — corrective/agentic RAG over Qdrant).
 - Live source: GitHub issues/PRs tool, outside Qdrant.
 - LLM: Azure OpenAI **gpt-5-mini** (routing + generation + grounding judge). Embeddings are

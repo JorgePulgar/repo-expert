@@ -28,3 +28,8 @@ class RetrievalResult(BaseModel):
     content: str
     citation: Citation
     score: float | None = None
+    # Reading position of the chunk within its file, and the repo it came from.
+    # Used to pull adjacent chunks as extra context when an answer straddles two
+    # of them. Absent for code chunks and for live (non-indexed) sources.
+    seq: int | None = None
+    repo_slug: str | None = None

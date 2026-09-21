@@ -130,6 +130,37 @@
 .rex-bubble p { margin: 0 0 0.65rem; }
 .rex-bubble p:last-child { margin-bottom: 0; }
 
+/* The model answers in markdown; these are the shapes it actually emits. */
+.rex-bubble ul,
+.rex-bubble ol { margin: 0 0 0.65rem; padding-left: 1.25rem; }
+.rex-bubble ul:last-child,
+.rex-bubble ol:last-child { margin-bottom: 0; }
+.rex-bubble li { margin-bottom: 0.35rem; }
+.rex-bubble li:last-child { margin-bottom: 0; }
+.rex-bubble ul { list-style: none; padding-left: 0.9rem; }
+.rex-bubble ul li { position: relative; padding-left: 0.85rem; }
+.rex-bubble ul li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--rex-accent);
+}
+
+.rex-bubble code {
+  font-family: var(--rex-mono);
+  font-size: 0.86em;
+  padding: 0.1em 0.32em;
+  border-radius: 2px;
+  background: var(--rex-surface-user);
+  overflow-wrap: anywhere;
+}
+
+.rex-bubble strong { font-weight: 600; }
+
 /* Inline [n] citation markers rendered as superscript links. */
 .rex-cite-ref {
   font-family: var(--rex-mono);

@@ -14,8 +14,8 @@ Status legend: `⬜ not started` · `🟡 in progress` · `✅ done`
 | 4  | FastAPI Backend                | `feature/phase-4-api`           | ✅     | [phase-4-api.md](phase-4-api.md) |
 | 5  | Evaluation                     | `feature/phase-5-eval`          | ✅     | [phase-5-eval.md](phase-5-eval.md) |
 | 6  | Portfolio Instance             | `feature/phase-6-portfolio`     | ✅     | [phase-6-portfolio.md](phase-6-portfolio.md) |
-| 7  | Migrate to Qdrant & Deploy     | `feature/phase-7-docs-deploy`   | 🟡     | [phase-7-qdrant-deploy.md](phase-7-qdrant-deploy.md) |
-| 8  | Chat Widget (Hostinger)        | `feature/phase-8-chat-widget`   | ⬜     | [phase-8-chat-widget.md](phase-8-chat-widget.md) |
+| 7  | Migrate to Qdrant & Deploy     | `feature/phase-7-docs-deploy`   | ✅     | [phase-7-qdrant-deploy.md](phase-7-qdrant-deploy.md) |
+| 8  | Chat page (`/chat.html`)       | `feature/phase-8-chat-widget`   | ⬜     | [phase-8-chat-widget.md](phase-8-chat-widget.md) |
 
 ## Conventions (recap — full rules in root `CLAUDE.md`)
 - One **branch per phase**, one **commit per task**.

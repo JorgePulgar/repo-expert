@@ -1,7 +1,7 @@
 {
   "instance": "portfolio",
   "repo": "JorgePulgar/ai-invoice-analyzer",
-  "generated_at": "2026-06-17T10:49:36+00:00",
+  "generated_at": "2026-09-20T20:19:20+00:00",
   "relevance": {
     "n": 10,
     "routing_accuracy": 1.0,
@@ -126,9 +126,9 @@
   },
   "groundedness": {
     "n": 10,
-    "faithfulness_rate": 1.0,
-    "mean_faithfulness_score": 1.0,
-    "self_grounded_rate": 0.9,
+    "faithfulness_rate": 0.7,
+    "mean_faithfulness_score": 0.9,
+    "self_grounded_rate": 1.0,
     "items": [
       {
         "id": "career-licitai-role",
@@ -153,8 +153,8 @@
       },
       {
         "id": "career-datarmony",
-        "faithful": true,
-        "score": 1.0,
+        "faithful": false,
+        "score": 0.85,
         "self_grounded": true,
         "fallback_used": false
       },
@@ -176,7 +176,7 @@
         "id": "repo-interview-agent",
         "faithful": true,
         "score": 1.0,
-        "self_grounded": false,
+        "self_grounded": true,
         "fallback_used": true
       },
       {
@@ -188,15 +188,15 @@
       },
       {
         "id": "repo-clarity-bank",
-        "faithful": true,
-        "score": 1.0,
+        "faithful": false,
+        "score": 0.35,
         "self_grounded": true,
         "fallback_used": false
       },
       {
         "id": "repo-invoice-analyzer",
-        "faithful": true,
-        "score": 1.0,
+        "faithful": false,
+        "score": 0.8,
         "self_grounded": true,
         "fallback_used": false
       }

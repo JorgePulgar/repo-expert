@@ -54,3 +54,44 @@ portfolio career regression is contained (groundedness intact, only recall on lo
 career entries). **Mitigations if it matters later:** chunk the career doc smaller to
 fit MiniLM's 256-token window; raise `top` for the career collection; or adopt a larger
 free embed model if Qdrant enables one on the free tier (the original mxbai choice).
+
+---
+
+## Addendum — 2026-09-20: model change gpt-4o-mini → gpt-5-mini (P7-T8)
+
+The Azure subscription behind the original runs lapsed and its Foundry resource was
+deleted, so the chat stack was rebuilt on a new subscription. `gpt-4o-mini` can no longer
+be deployed at all — Azure rejects it with *"has been deprecated since 03/31/2026"* — so
+routing, generation, and the grounding judge now run on **`gpt-5-mini`**.
+
+Portfolio instance, same 10-question set, same Qdrant collections (re-ingested: 2146 docs
++ 941 code + 22 career chunks):
+
+| Metric | gpt-4o-mini (2026-06-17) | gpt-5-mini (2026-09-20) | Δ |
+| --- | --- | --- | --- |
+| Routing accuracy | 1.0 | 1.0 | — |
+| Relevance hit@6 | 0.8 | 0.8 | — |
+| ↳ career | 0.6 | 0.6 | — |
+| ↳ mixed | 1.0 | 1.0 | — |
+| Faithfulness rate (judge) | 1.0 | **0.7** | ▼ −0.3 |
+| Mean faithfulness | 1.0 | **0.9** | ▼ −0.1 |
+| Agent self-grounded rate | 0.9 | **1.0** | ▲ +0.1 |
+
+**Read:** retrieval is untouched, as expected — embeddings, chunking, and collections did
+not change, only the chat model. The groundedness drop is mostly **judge strictness, not
+worse answers**: the judge is itself `gpt-5-mini`, and two of the three "unfaithful"
+verdicts carry scores of **0.85** (`career-datarmony`) and **0.8**
+(`repo-invoice-analyzer`) — high scores paired with `faithful: false`, which `gpt-4o-mini`
+did not do. Only `repo-clarity-bank` (**0.35**) is a genuine failure, and it is the same
+long-career-entry weakness already documented above: MiniLM's 256-token window truncates
+that content, so the answer outruns its evidence.
+
+**Caveat:** generator and judge changed together, so this comparison cannot fully separate
+"stricter judge" from "less faithful generator". Pinning the judge to a fixed model while
+varying the generator would separate them; not done here because `gpt-4o-mini` is no longer
+deployable, so there is no way to reproduce the old baseline.
+
+**Note on determinism:** `gpt-5-mini` rejects any `temperature` but its default
+(`"Only the default (1) value is supported"`), so the previous `temperature=0.0` pinning is
+gone from `agent/llm.py` and `retrieval/issues.py`. Run-to-run variance is therefore higher
+than in the gpt-4o-mini runs.

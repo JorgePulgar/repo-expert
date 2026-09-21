@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     # "*" allows any origin — the default until the site domain is known; tighten
     # to the Hostinger domain once the widget ships (Phase 8).
     cors_origins: str = Field("*", alias="CORS_ORIGINS")
+    # Per-IP hourly budget for /ask. It is unauthenticated and every call costs
+    # money, and CORS only constrains browsers — a script can call it directly.
+    # 0 disables the limiter (local development).
+    rate_limit_per_hour: int = Field(10, alias="RATE_LIMIT_PER_HOUR")
 
     @property
     def cors_origin_list(self) -> list[str]:

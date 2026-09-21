@@ -1,6 +1,8 @@
 # Secrets
 .env
 .env.*.local
+.env.bak
+.env.backup
 *.key
 
 # Python / uv

@@ -9,9 +9,15 @@ citations.** One codebase, two instances selected by config — no code changes 
 - **portfolio** — recruiter demo pointed at Jorge Pulgar's portfolio repos + a Career KB.
 
 Stack: Qdrant Cloud (vector search + free server-side inference) · RRF fusion · LangGraph
-(corrective/agentic RAG) · FastAPI · Azure OpenAI `gpt-4o-mini`. Deployed free on Hugging
-Face Spaces. Python 3.12, managed with [uv](https://docs.astral.sh/uv/). Recurring cost
+(corrective/agentic RAG) · FastAPI · Azure OpenAI `gpt-5-mini`. Deployed on Azure Container Apps
+(scale-to-zero). Python 3.12, managed with [uv](https://docs.astral.sh/uv/). Recurring cost
 ~$0–1/month.
+
+**Live (portfolio instance):**
+`https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io`
+— [`/health`](https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io/health)
+· [`/docs`](https://ca-repo-expert.delightfulgrass-0e92a824.swedencentral.azurecontainerapps.io/docs).
+Scale-to-zero means the first request after an idle period takes a few seconds to wake.
 
 ## What it does
 
@@ -40,7 +46,7 @@ full design.
 
 - [uv](https://docs.astral.sh/uv/) (manages Python 3.12 automatically).
 - A Qdrant Cloud free-tier cluster (with server-side inference) + an Azure OpenAI
-  `gpt-4o-mini` deployment. A GitHub token is needed only for the public instance's live
+  `gpt-5-mini` deployment. A GitHub token is needed only for the public instance's live
   issues source. Provisioning steps: [`docs/setup.md`](docs/setup.md).
 
 ## Setup
@@ -110,10 +116,16 @@ relevance** and **groundedness**. Regenerate with `uv run repo-expert eval` (add
 
 Full report: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 
-**Portfolio instance** (n=10, career + portfolio-repo questions): **routing 1.0,
-relevance hit@6 0.8 (career 0.6 · mixed 1.0), faithfulness 1.0**
+> ⚠️ **These public-instance numbers were measured on `gpt-4o-mini` (2026-06) and have not
+> been re-run since the move to `gpt-5-mini`.** Re-running them needs a working
+> `GITHUB_TOKEN` for the live issues source; the portfolio numbers below are current.
+
+**Portfolio instance** (n=10, career + portfolio-repo questions, re-run 2026-09-20 on
+`gpt-5-mini`): **routing 1.0, relevance hit@6 0.8 (career 0.6 · mixed 1.0), faithfulness
+0.7, mean faithfulness 0.9**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Off-topic questions
-are declined by the config-driven scope guardrail.
+are declined by the config-driven scope guardrail. See the model-change note below for why
+faithfulness moved.
 
 **Analysis / limitations** (Qdrant stack; full Azure→Qdrant comparison in
 [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md)):
@@ -125,14 +137,21 @@ are declined by the config-driven scope guardrail.
   because the GitHub Search API ANDs terms and returns nothing for prose (0.0 → 1.0).
 - One regression: portfolio **career recall** dropped 1.0 → 0.6 — the cost of the free-tier
   embed model (`all-MiniLM-L6-v2`, 384-dim, ~256-token input window) truncating longer
-  career entries. Groundedness stays 1.0; mitigations are documented.
-- Groundedness uses an LLM judge (gpt-4o-mini), so scores carry small run-to-run variance.
+  career entries. Mitigations are documented.
+- Groundedness uses an LLM judge (gpt-5-mini), so scores carry run-to-run variance. The
+  judge no longer runs at `temperature=0` — gpt-5-mini only accepts its default — so
+  variance is higher than in earlier runs.
+- **2026-09-20 model change:** `gpt-4o-mini` became undeployable on Azure (deprecated
+  2026-03-31), so the stack moved to `gpt-5-mini`. Retrieval is unchanged; portfolio
+  faithfulness reads 1.0 → 0.7, mostly because gpt-5-mini judges more strictly (two of the
+  three failures score 0.8–0.85). See
+  [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full delta.
 
 ## Documentation
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — components, data flow, agent graph, decisions.
 - [`docs/setup.md`](docs/setup.md) — Qdrant + Azure OpenAI provisioning.
-- [`docs/deploy.md`](docs/deploy.md) — container build + Hugging Face Spaces deployment.
+- [`docs/deploy.md`](docs/deploy.md) — container build + Azure Container Apps deployment.
 - [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) — backend-migration eval deltas.
 - [`docs/phases/README.md`](docs/phases/README.md) — phase-by-phase development log.
 

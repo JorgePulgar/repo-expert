@@ -90,6 +90,9 @@ _PORTFOLIO_REPOS = [
     "OCR-and-ML-Pipeline-for-Menu-Predictions",
     "Rag-Assistants-Platform",
     "sales-receptivity-cnn",
+    # This repo. A visitor's first question is often "what is this?", and without
+    # it in the index the assistant could not answer anything about itself.
+    "repo-expert",
 ]
 
 PORTFOLIO = InstanceConfig(
@@ -128,6 +131,11 @@ PORTFOLIO = InstanceConfig(
         # Engineer — NeuralForge (ficticio)"), and "what has he built" returned
         # "Firma" and "Voz (innegociable)" from an email-writing prompt.
         "**/prompts/**", "**/tasks/**", "**/.claude/**",
+        # This repo's own internals: phase specs are task lists (same class as
+        # "**/tasks/**"), CLAUDE.md is agent instructions, and the career doc is
+        # already the career collection — indexing it again as a doc would make
+        # every career answer retrieve twice from two collections.
+        "**/docs/phases/**", "**/CLAUDE.md", "**/jorge-pulgar-career-rag.md",
     ],
 )
 

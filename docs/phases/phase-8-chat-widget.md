@@ -150,6 +150,26 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     retrieving less evidence than the generator used; see the addendum in
     `docs/eval-qdrant-vs-azure.md`.
   - Corpus: 2694 chunks (1691 docs · 947 code · 56 career), `sales-receptivity-cnn` added.
+- [x] **P8-T7** — The assistant could not describe itself, and a stale number survived. **Done 2026-09-22.**
+  - Why: the first thing a recruiter asks the chat is *"what is this?"*. "¿Qué es Repo
+    Expert y qué stack usa?" answered *"no sé — las fuentes no mencionan Repo Expert"*.
+  - **Root cause: nothing about repo-expert was indexed.** It was absent from
+    `_PORTFOLIO_REPOS` and had no career-doc section. It *looked* indexed because career
+    chunks cite the `JorgePulgar/repo-expert` blob URL (the career doc lives in this
+    repo), so the citations in other answers pointed at repo-expert while carrying no
+    content about it. Fixed by adding the repo to the portfolio instance (excluding
+    `docs/phases/**`, `CLAUDE.md`, and the career doc itself, which is already its own
+    collection) and adding two career sections plus a "what is this chat" FAQ block.
+  - Also fixed: the career doc claimed **4,000** lines for RAG Assistants Platform where
+    the site said ~5,000. Counted: 4,973 (3,324 backend + 1,649 frontend), 56 tests.
+  - **Ingestion could not remove anything.** Upsert writes the current chunks and leaves
+    behind the ones a source stopped producing — and an oversized section's anchors are
+    positional (`--p1`, `--p2`), so shortening a section orphans its tail pieces holding
+    the superseded text. Added `prune_missing()`: a full ingest is the complete intended
+    content, so anything not in the fresh set is deleted. First run removed **118 stale
+    docs points and 4 career points** that were still retrievable.
+  - Corpus: 2809 chunks (1681 docs · 1062 code · 66 career). Verified in production:
+    both questions now answer correctly with citations.
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

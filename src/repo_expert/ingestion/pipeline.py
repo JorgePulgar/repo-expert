@@ -16,7 +16,7 @@ from repo_expert.ingestion.fetch import fetch_repo
 from repo_expert.ingestion.markdown import chunk_repo_markdown
 from repo_expert.ingestion.models import Chunk
 from repo_expert.ingestion.qdrant_collections import create_collections
-from repo_expert.ingestion.qdrant_upload import upsert_chunks
+from repo_expert.ingestion.qdrant_upload import prune_missing, upsert_chunks
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,14 @@ def ingest(cfg: InstanceConfig | None = None) -> dict[str, int]:
     if career and cfg.source3_index:
         summary[cfg.source3_index] = upsert_chunks(cfg.source3_index, career)
         logger.info("Chunked %d career entries", len(career))
+
+    # Upsert writes the current chunks but never removes the ones a source no longer
+    # produces, so an edited document leaves its superseded pieces behind and they
+    # stay retrievable. This run is the full intended content of each collection.
+    prune_missing(cfg.docs_index, docs)
+    prune_missing(cfg.code_index, code)
+    if career and cfg.source3_index:
+        prune_missing(cfg.source3_index, career)
 
     logger.info("Ingestion complete: %s", summary)
     return summary

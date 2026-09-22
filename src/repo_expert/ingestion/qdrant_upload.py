@@ -40,6 +40,44 @@ def chunk_to_point(chunk: Chunk) -> models.PointStruct:
     )
 
 
+def prune_missing(collection_name: str, chunks: list[Chunk], batch_size: int = 256) -> int:
+    """Delete points of ``collection_name`` that the fresh chunk set no longer covers.
+
+    Upsert alone cannot keep the collection correct. A chunk id is
+    ``repo:file:anchor``, and an oversized section's anchors are positional
+    (``anchor--p1``, ``--p2``, ...), so editing a document until it splits into
+    fewer pieces leaves the trailing pieces behind as orphans holding the old
+    text. Retrieval would then serve a superseded answer that no source file
+    contains any more. Ingestion rebuilds a collection in full, so anything not in
+    the fresh set is stale by definition. Returns the number of points deleted.
+    """
+    if not chunks:
+        return 0
+    client = get_qdrant_client()
+    keep = {point_id(c.id) for c in chunks}
+    stale: list[str] = []
+    offset = None
+    while True:
+        points, offset = client.scroll(
+            collection_name=collection_name,
+            limit=1024,
+            offset=offset,
+            with_payload=False,
+            with_vectors=False,
+        )
+        stale.extend(str(pt.id) for pt in points if str(pt.id) not in keep)
+        if offset is None:
+            break
+    for start in range(0, len(stale), batch_size):
+        client.delete(
+            collection_name=collection_name,
+            points_selector=models.PointIdsList(points=stale[start : start + batch_size]),
+        )
+    if stale:
+        logger.info("Pruned %d stale points from %s", len(stale), collection_name)
+    return len(stale)
+
+
 def upsert_chunks(collection_name: str, chunks: list[Chunk], batch_size: int = 64) -> int:
     """Upsert chunks into the collection (server-side embedded). Returns the count."""
     if not chunks:

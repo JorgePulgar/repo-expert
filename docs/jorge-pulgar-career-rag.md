@@ -116,7 +116,7 @@ He also holds a **Cambridge English certification at C1 level** (see Languages).
 **RAG Assistants Platform** is Jorge Pulgar's flagship personal project: a platform for creating and running multiple isolated RAG assistants, each with its own knowledge base.
 
 - **Jorge's role:** Sole author — designed and built the full system (backend, retrieval, frontend) in roughly 7 days using Claude Code as a development accelerator.
-- **What he built / engineering highlights:** Structural isolation with **one search index per assistant** (so assistants can't leak each other's data); **query rewriting** to improve retrieval; **hybrid search plus a semantic reranker** for relevance. Roughly 4,000 lines of code with 56 tests.
+- **What he built / engineering highlights:** Structural isolation with **one search index per assistant** (so assistants can't leak each other's data); **query rewriting** to improve retrieval; **hybrid search plus a semantic reranker** for relevance. Roughly 5,000 lines of code with 56 tests.
 - **Stack (recruiter language):** Azure AI Foundry, Azure AI Search (vector + hybrid + semantic reranking), Python / FastAPI backend, React + TypeScript frontend.
 - **Why it mattered:** Demonstrates Jorge's depth in production-style RAG architecture — multi-tenant isolation, retrieval-quality engineering, and a tested, full-stack build.
 - **Outcome / impact:** Portfolio / demonstration project (no external users claimed); the value is the architecture and engineering quality.
@@ -231,6 +231,30 @@ He also holds a **Cambridge English certification at C1 level** (see Languages).
 
 ---
 
+### Repo Expert (`repo-expert`) — agentic RAG over any GitHub repo (this assistant)
+
+**Repo Expert** is a project by Jorge Pulgar, and it is the assistant answering this question. It is an agentic RAG system that answers questions about any GitHub repository it is pointed at, with inline citations back to the exact file and line. One codebase runs two instances selected purely by config, with no code changes to switch: a **public** instance pointed at `fastapi/fastapi` (the class deliverable) and a **portfolio** instance pointed at Jorge's own repositories plus a Career Knowledge Base (the recruiter demo on his website).
+
+- **Jorge's role:** Sole author — retrieval, agent, API, evaluation, deployment, and the embeddable chat widget.
+- **Stack (recruiter language):** Python 3.12 managed with `uv`; **FastAPI** backend (`/ask`, `/health`); **LangGraph** for the agent graph; **Qdrant Cloud** as the vector store, using its free server-side inference with the `multilingual-e5-small` embedding model; **Azure OpenAI `gpt-5-mini`** for routing, generation, and the grounding judge; deployed on **Azure Container Apps** with scale-to-zero; the chat widget is vanilla JavaScript and CSS embedded on his Hostinger-hosted site. Recurring cost is roughly **$0–1/month**.
+
+---
+
+### Repo Expert — how it works and what he built
+
+*(Continues the Repo Expert entry above: Jorge Pulgar's agentic RAG assistant, `repo-expert`.)*
+
+- **The agent loop.** A `/ask` request goes to a LangGraph graph that **routes** the question to the right knowledge sources, **retrieves**, **generates an answer with citations**, then **judges its own grounding** and falls back and retries when the answer isn't supported by the retrieved evidence. The reasoning and the fusion live in Jorge's code; the managed service only stores vectors and embeds — a deliberate build-vs-buy boundary.
+- **Three heterogeneous knowledge sources.** Markdown documentation, source code chunked by code structure, and a third source that swaps per instance: live GitHub issues/PRs queried through the API for the public instance, and the Career Knowledge Base for the portfolio one.
+- **Retrieval engineering — every part fixed an observed failure, not an anticipated one.** Section-level chunking with the heading repeated on each piece (the embedding model truncates at ~256 tokens *silently*, and 12 of 22 career sections were overflowing with their tails unsearchable); multilingual embeddings (the English-only model returned 6/6 unrelated chunks for the same question asked in Spanish); **weighted rank fusion with proportional slots** instead of plain RRF (RRF ranks only *within* a collection, so every collection tied at #1 and the merge degenerated into a fixed quota); neighbour expansion so an answer straddling a chunk boundary is still whole; and a *gated* query rewrite — rewriting every question made retrieval worse.
+- **Measured, not asserted.** A curated evaluation set scores retrieval relevance and groundedness on every change. The retrieval rework moved **hit@6 from 0.8 to 1.0** (career sources 0.6 → 1.0) and faithfulness from 0.7 to 1.0 — and Jorge documents the caveat that part of that gain was a *measurement* fix (the faithfulness judge had been cropping away the evidence it was judging), not a quality gain.
+- **Production concerns.** `/ask` is unauthenticated and costs money on every call, so it is rate-limited to 10 questions per hour per IP and rejected before any LLM call; he documents explicitly that CORS is not the protection, since browsers enforce it and a script does not.
+- **Size:** roughly 4,800 lines of code (Python backend plus the browser widget) with 73 tests.
+- **Why it mattered:** It is the piece of his portfolio that a recruiter can actually use — and it doubles as the deepest demonstration of his specialism, retrieval quality: every fix is traced to a reproduced failure and re-measured afterwards.
+- **Outcome / impact:** Live on Jorge's website as the chat assistant, and submitted as his class deliverable pointed at the FastAPI repository.
+
+---
+
 ## How Jorge works
 
 - **End-to-end builder.** Comfortable across the stack — data and models, Python/FastAPI backends, React/TypeScript frontends, and Azure cloud AI services — so he can take a project from idea to working product.
@@ -244,6 +268,17 @@ He also holds a **Cambridge English certification at C1 level** (see Languages).
 ---
 
 ## Common recruiter questions (FAQ)
+
+### What is this chat, and what can I ask it?
+
+**Q: What is this? What am I talking to?**
+You are talking to **Repo Expert**, an agentic RAG assistant built by Jorge Pulgar and running on his own website. It answers questions about Jorge — his background, skills, experience and projects — and about the code and documentation of his portfolio repositories, citing the exact source for every claim. It is built with LangGraph, FastAPI, Qdrant Cloud and Azure OpenAI `gpt-5-mini`, and it is itself one of the projects in the portfolio it describes.
+
+**Q: What can I ask it?**
+Anything about Jorge's experience, his stack, a specific project, how something in one of his repositories works, or how this assistant itself is built. It only covers Jorge and his work; it declines anything else.
+
+**Q: Where do its answers come from?**
+Three knowledge sources: this career document, the markdown documentation of his repositories, and their source code. Every answer carries citations back to the file it came from, and the agent checks its own answer against the retrieved evidence before returning it.
 
 **Q: What is Jorge's strongest area?**
 Applied RAG and LLM application engineering on Azure — building retrieval systems with hybrid search, reranking, query rewriting, multi-tenant isolation, and real citation integrity, then shipping them as full-stack apps.

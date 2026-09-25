@@ -354,6 +354,13 @@
 
 .rex-status-error { color: var(--rex-danger); }
 
+/* Messages ease in rather than popping into place. */
+.rex-msg { animation: rex-in 0.28s ease-out both; }
+@keyframes rex-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
 /* An empty status line should not leave a gap under the composer. It stays in the
    DOM (it is the aria-live region); it just stops taking space until it has text. */
 .rex-status:empty { min-height: 0; margin-top: -1.1rem; }
@@ -374,6 +381,7 @@
 @keyframes rex-spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
+  .rex-msg { animation: none; }
   .rex-spinner { animation-duration: 3s; }
   .rex-log { scroll-behavior: auto; }
 }
@@ -412,6 +420,16 @@
   .rex-starter { text-align: left; padding: 0.55rem 0.7rem; font-size: 0.82rem; }
   .rex-starter-long { display: inline; }
   .rex-starter-short { display: none; }
+
+  /* Once a conversation starts, the card takes the whole screen so there is room to
+     read. The host sets --rex-fill-offset to the height of its fixed bars (plus a
+     little air); 100svh is the height with the browser's toolbars showing. */
+  .rex-chat.rex-active {
+    height: calc(100vh - var(--rex-fill-offset, 2rem));
+    height: calc(100svh - var(--rex-fill-offset, 2rem));
+    min-height: 22rem;
+  }
+  .rex-chat.rex-active .rex-log { flex: 1 1 auto; min-height: 0; max-height: none; }
 }
 
 /* Very narrow phones: a side-by-side composer would squeeze the input too far. */

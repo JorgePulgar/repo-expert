@@ -304,6 +304,8 @@
 
     function addMessage(role, roleLabel) {
       if (empty && empty.parentNode) empty.parentNode.removeChild(empty);
+      // First message: from here on phones give the card the full screen height.
+      root.classList.add("rex-active");
       var wrap = el("div", "rex-msg rex-msg-" + role);
       wrap.appendChild(el("div", "rex-msg-role", roleLabel));
       var bubble = el("div", "rex-bubble");

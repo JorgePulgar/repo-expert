@@ -6,6 +6,9 @@
  *   <div id="rex-chat" data-api="https://ca-repo-expert.example.azurecontainerapps.io"></div>
  *   <script src="rex-chat.js"></script>
  *
+ * Optional attributes on the mount div: data-starters (JSON list of starter
+ * questions) and data-hint (header hint text; empty string hides it).
+ *
  * Contract (see repo-expert/src/repo_expert/api/schemas.py):
  *   POST /ask  {question, history: [{question, answer}, ...]}
  *     -> {answer, citations[], route[], grounded, fallback_used}
@@ -194,7 +197,11 @@
     headLabel.appendChild(el("span", "rex-dot"));
     headLabel.appendChild(el("span", null, TEXT.headLabel));
     head.appendChild(headLabel);
-    head.appendChild(el("div", "rex-head-hint", TEXT.headHint));
+    /* The default hint describes a page that explains the chat below it. A host
+       page with a different layout overrides it with data-hint; an empty value
+       drops the hint altogether. */
+    var hint = root.hasAttribute("data-hint") ? root.getAttribute("data-hint") : TEXT.headHint;
+    if (hint) head.appendChild(el("div", "rex-head-hint", hint));
 
     var log = el("div", "rex-log");
     log.setAttribute("role", "log");

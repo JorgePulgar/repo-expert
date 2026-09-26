@@ -170,6 +170,26 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     docs points and 4 career points** that were still retrievable.
   - Corpus: 2809 chunks (1681 docs · 1062 code · 66 career). Verified in production:
     both questions now answer correctly with citations.
+- [ ] **P8-T8** — Grounding judge at `reasoning_effort="low"`.
+  - Commit: `perf(p8): run the grounding judge at low reasoning effort [P8-T8]`
+  - Why: an answer took 16–27s and ~95% of it was gpt-5-mini reasoning at its default
+    "medium" effort. The judge alone took 6–12s and up to ~1,000 reasoning tokens
+    (billed as output) to reply `{"grounded": true}`.
+  - Measured offline (2026-09-26, ~150 runs over three rounds: the 10 eval questions,
+    the 3 starters, follow-ups, and a 24-question adversarial set — false premises,
+    injection, negation, enumeration), each answer checked by a high-effort referee:
+    - judge "low" ≈ "medium": 3 vs 2 false passes, 2 vs 2 false rejections over 152
+      drafts; "minimal" rejected 7 correct answers on the hard set, so it was dropped.
+    - generation "low" was also tested and **rejected**: 71/76 faithful vs 76/76 —
+      it failed enumeration ("all projects using LangGraph"), negation, and false
+      premises. Generation stays at the default.
+    - query rewrite "minimal" was rejected too (quality 7.9 vs 9.0 on rewritten
+      questions). It stays at the default.
+  - Effort is per call (`chat(reasoning_effort=...)`), not global, so the eval judge keeps
+    the effort its numbers were measured at. Configurable via
+    `GROUNDING_REASONING_EFFORT`; empty restores the deployment default.
+  - DoD: unit tests for the effort pass-through; eval re-run after deploy shows
+    faithfulness and self-grounding unchanged; answer latency measured in production.
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

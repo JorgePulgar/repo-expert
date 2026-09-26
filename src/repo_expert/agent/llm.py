@@ -20,6 +20,7 @@ def chat(
     json_mode: bool = False,
     temperature: float | None = None,
     history: list[tuple[str, str]] | None = None,
+    reasoning_effort: str | None = None,
 ) -> str:
     """Chat completion; returns the assistant message text.
 
@@ -29,6 +30,10 @@ def chat(
     treating every question as the start of a conversation. Only the last few turns
     are kept, and past answers are trimmed, so a long conversation cannot crowd out
     the retrieved sources.
+
+    ``reasoning_effort`` is passed through to gpt-5-family deployments; None leaves
+    the deployment default ("medium"). It is set per call, not globally: the eval
+    judge also calls this helper and must keep the effort it was measured at.
     """
     client = get_openai_client()
     deployment = get_settings().azure_openai_chat_deployment
@@ -52,13 +57,23 @@ def chat(
         kwargs["temperature"] = temperature
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
+    if reasoning_effort:
+        kwargs["reasoning_effort"] = reasoning_effort
     resp = client.chat.completions.create(**kwargs)
     return resp.choices[0].message.content or ""
 
 
-def chat_json(system: str, user: str, temperature: float | None = None) -> dict:
+def chat_json(
+    system: str,
+    user: str,
+    temperature: float | None = None,
+    reasoning_effort: str | None = None,
+) -> dict:
     """Chat completion parsed as JSON; returns {} on parse failure."""
-    raw = chat(system, user, json_mode=True, temperature=temperature)
+    raw = chat(
+        system, user, json_mode=True, temperature=temperature,
+        reasoning_effort=reasoning_effort,
+    )
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):

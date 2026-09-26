@@ -70,6 +70,13 @@ class Settings(BaseSettings):
     # money, and CORS only constrains browsers — a script can call it directly.
     # 0 disables the limiter (local development).
     rate_limit_per_hour: int = Field(10, alias="RATE_LIMIT_PER_HOUR")
+    # Reasoning effort for the grounding judge. At the deployment default ("medium")
+    # it spent 6-12s and up to ~1,000 reasoning tokens to answer {"grounded": true}.
+    # "low" matched it against a high-effort referee (152 drafts: 3 vs 2 false passes,
+    # 2 vs 2 false rejections) in ~half the time; "minimal" did not (7 false rejections
+    # on hard questions). Empty = deployment default. Generation stays at the default:
+    # "low" there lost enumeration, negation and false-premise questions.
+    grounding_reasoning_effort: str = Field("low", alias="GROUNDING_REASONING_EFFORT")
 
     @property
     def cors_origin_list(self) -> list[str]:

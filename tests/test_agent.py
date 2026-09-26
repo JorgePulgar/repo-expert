@@ -1,5 +1,7 @@
 """Offline unit tests for agent nodes (LLM and config mocked)."""
 
+from types import SimpleNamespace
+
 from repo_expert.agent import graph
 from repo_expert.agent.graph import (
     MAX_ATTEMPTS,
@@ -63,6 +65,36 @@ def test_grounding_passes_through_llm_verdict(monkeypatch) -> None:
 def test_grounding_flags_unsupported(monkeypatch) -> None:
     monkeypatch.setattr(graph, "chat_json", lambda *a, **k: {"grounded": False})
     assert grounding_node({"draft": "wrong", "results": [_result()]}) == {"grounded": False}
+
+
+def test_grounding_uses_configured_effort(monkeypatch) -> None:
+    seen = {}
+
+    def _judge(*a, **k):
+        seen.update(k)
+        return {"grounded": True}
+
+    monkeypatch.setattr(graph, "chat_json", _judge)
+    monkeypatch.setattr(
+        graph, "get_settings", lambda: SimpleNamespace(grounding_reasoning_effort="low")
+    )
+    grounding_node({"draft": "ans", "results": [_result()]})
+    assert seen["reasoning_effort"] == "low"
+
+
+def test_grounding_empty_effort_means_deployment_default(monkeypatch) -> None:
+    seen = {}
+
+    def _judge(*a, **k):
+        seen.update(k)
+        return {"grounded": True}
+
+    monkeypatch.setattr(graph, "chat_json", _judge)
+    monkeypatch.setattr(
+        graph, "get_settings", lambda: SimpleNamespace(grounding_reasoning_effort="")
+    )
+    grounding_node({"draft": "ans", "results": [_result()]})
+    assert seen["reasoning_effort"] is None
 
 
 # --- generate / fallback / edges ----------------------------------------------

@@ -11,6 +11,7 @@ from langgraph.graph import END, START, StateGraph
 from repo_expert.agent.llm import chat, chat_json
 from repo_expert.agent.state import AgentState
 from repo_expert.config.instance import get_instance_config
+from repo_expert.config.settings import get_settings
 from repo_expert.retrieval.models import RetrievalResult
 from repo_expert.retrieval.registry import available_sources, get_retrievers
 
@@ -128,6 +129,7 @@ def grounding_node(state: AgentState) -> AgentState:
     data = chat_json(
         _GROUNDING_SYSTEM,
         f"Sources:\n{sources}\n\nAnswer: {draft}",
+        reasoning_effort=get_settings().grounding_reasoning_effort or None,
     )
     return {"grounded": bool(data.get("grounded", False))}
 

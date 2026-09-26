@@ -1,7 +1,11 @@
 """Offline API tests (agent and index lookups mocked)."""
 
+import json
+
+import httpx
 import pytest
 from fastapi.testclient import TestClient
+from openai import BadRequestError, RateLimitError
 
 from repo_expert.agent.agent import AnswerResult
 from repo_expert.api import routes
@@ -60,3 +64,53 @@ def test_ask_upstream_error_returns_500(client, monkeypatch) -> None:
     monkeypatch.setattr(routes, "ask", _boom)
     resp = client.post("/ask", json={"question": "x"})
     assert resp.status_code == 500 and "detail" in resp.json()
+
+
+def _sse_events(body: str) -> list[tuple[str, dict]]:
+    events = []
+    for block in body.strip().split("\n\n"):
+        lines = dict(line.split(": ", 1) for line in block.splitlines())
+        events.append((lines["event"], json.loads(lines["data"])))
+    return events
+
+
+def test_ask_stream_relays_events(client, monkeypatch) -> None:
+    def _fake(q, history=None):
+        yield {"event": "draft", "citations": [{"title": "t", "url": "http://x"}]}
+        yield {"event": "delta", "text": "Hola "}
+        yield {"event": "delta", "text": "[1]"}
+        yield {"event": "done", "answer": "Hola [1]", "grounded": True}
+
+    monkeypatch.setattr(routes, "stream_ask", _fake)
+    resp = client.post("/ask/stream", json={"question": "hola"})
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/event-stream")
+    events = _sse_events(resp.text)
+    assert [name for name, _ in events] == ["draft", "delta", "delta", "done"]
+    assert events[-1][1]["answer"] == "Hola [1]"
+
+
+def test_ask_stream_failure_becomes_error_event(client, monkeypatch) -> None:
+    def _fake(q, history=None):
+        yield {"event": "delta", "text": "Ho"}
+        raise RuntimeError("model went away")
+
+    monkeypatch.setattr(routes, "stream_ask", _fake)
+    events = _sse_events(client.post("/ask/stream", json={"question": "x"}).text)
+    assert events[-1] == ("error", {"kind": "internal"})
+
+
+def test_error_kind_classifies_quota_and_filter() -> None:
+    request = httpx.Request("POST", "http://x")
+    quota = RateLimitError("quota", response=httpx.Response(429, request=request), body=None)
+    filtered = BadRequestError(
+        "filtered", response=httpx.Response(400, request=request),
+        body={"code": "content_filter"},
+    )
+    assert routes._error_kind(quota) == "busy"
+    assert routes._error_kind(filtered) == "content_filter"
+    assert routes._error_kind(RuntimeError()) == "internal"
+
+
+def test_ask_stream_validation_rejects_empty(client) -> None:
+    assert client.post("/ask/stream", json={"question": ""}).status_code == 422

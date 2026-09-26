@@ -142,12 +142,15 @@ uv run repo-expert provision
 uv run repo-expert ingest
 uv run repo-expert --instance portfolio ingest   # instancia portfolio
 
-# 2. Servir la API (GET /health, POST /ask; docs interactivas en /docs)
+# 2. Servir la API (GET /health, POST /ask, POST /ask/stream; docs en /docs)
 uv run uvicorn repo_expert.api.app:app --reload
 
 # 3. Preguntar
 curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
+
+# ...o verla mientras se escribe (server-sent events)
+curl -N localhost:8000/ask/stream -H 'content-type: application/json' \n  -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
 ```
 
 `GET /health` reporta la instancia activa, el repositorio objetivo y los conteos de

@@ -128,3 +128,35 @@ def test_after_grounding_ends_when_nothing_left_to_widen(monkeypatch) -> None:
     monkeypatch.setattr(graph, "available_sources", lambda cfg: ["kb", "issues"])
     state = {"grounded": False, "attempts": 1, "route": ["kb", "issues"]}
     assert _after_grounding(state) == "end"
+
+
+# --- streaming -----------------------------------------------------------------
+
+def test_stream_ask_emits_draft_deltas_then_done(monkeypatch) -> None:
+    from repo_expert.agent import agent
+
+    monkeypatch.setattr(graph, "available_sources", lambda cfg: ["kb"])
+    monkeypatch.setattr(
+        graph, "get_retrievers", lambda cfg: {"kb": lambda q, top, history: [_result()]}
+    )
+    monkeypatch.setattr(graph, "get_instance_config", lambda: SimpleNamespace(scope_prompt=None))
+    monkeypatch.setattr(
+        graph, "get_settings", lambda: SimpleNamespace(grounding_reasoning_effort="low")
+    )
+    monkeypatch.setattr(graph, "chat_stream", lambda *a, **k: iter(["Use ", "f() [1]"]))
+    monkeypatch.setattr(graph, "chat_json", lambda *a, **k: {"grounded": True})
+
+    events = list(agent.stream_ask("how?"))
+    names = [e["event"] for e in events]
+    assert names[0] == "stage" and names[-1] == "done"
+    draft = names.index("draft")
+    assert names[draft + 1:draft + 3] == ["delta", "delta"]
+    assert "".join(e["text"] for e in events if e["event"] == "delta") == "Use f() [1]"
+    assert [e["stage"] for e in events if e["event"] == "stage"] == [
+        "retrieve", "generate", "verify"
+    ]
+    done = events[-1]
+    assert done["answer"] == "Use f() [1]" and done["grounded"] is True
+    assert done["citations"][0]["url"] == "http://x"
+    # /ask runs the same nodes without a stream consumer and must get the same answer.
+    assert agent.ask("how?").answer == "Use f() [1]"

@@ -69,7 +69,7 @@ vector store; the agent is the brain.
 | Ingestion | `src/repo_expert/ingestion/` | `pipeline.ingest`: fetch repo → chunk docs/code/career → upsert into Qdrant (server-side embedded). `qdrant_collections` provisions collections; `qdrant_upload` upserts; `qdrant_embed` wraps text as `models.Document`. |
 | Retrieval | `src/repo_expert/retrieval/` | `registry` resolves active retrievers; `kb` (Qdrant vector search + RRF) + `issues` (live GitHub). |
 | Agent | `src/repo_expert/agent/` | LangGraph `graph` + `agent.ask` entrypoint. |
-| API | `src/repo_expert/api/` | FastAPI app exposing `GET /health` and `POST /ask`. |
+| API | `src/repo_expert/api/` | FastAPI app exposing `GET /health`, `POST /ask`, and `POST /ask/stream` (same answer as server-sent events). |
 | CLI | `src/repo_expert/cli.py` | `repo-expert provision`, `ingest`, and `eval`. |
 | Eval | `src/repo_expert/eval/` | Retrieval-relevance + groundedness harness and report writer. |
 
@@ -210,6 +210,14 @@ and stays instance-agnostic. Active instance is chosen by `REPO_EXPERT_INSTANCE`
   so any replica can serve any turn and there is no session store to operate. The history
   is capped, and past answers trimmed, so a long conversation cannot crowd out the
   retrieved sources.
+- **Streaming runs the same graph, not a copy of it.** `generate` writes each piece of
+  text through LangGraph's stream writer; `/ask/stream` relays those as server-sent events
+  (`stage`, `draft` with the citations first, `delta`, then `done` with the full `/ask`
+  body), while under `/ask`'s plain `invoke()` the writer is a no-op. The grounding check
+  still runs after the text, so the verdict arrives as a badge a few seconds after the
+  answer. A failure after the 200 is sent becomes an `error` event (`busy`,
+  `content_filter`, `internal`) rather than an HTTP status. First text appears once the
+  model has finished reasoning — ~7-10s, against ~15-17s for the whole answer.
 - **The public endpoint is rate-limited, not CORS-protected.** `/ask` is unauthenticated
   and spends money on every call. CORS is enforced by browsers only — a script ignores it —
   so the guard is a per-IP limit (10/hour) that rejects *before* any LLM call. `/health`

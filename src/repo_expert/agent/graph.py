@@ -6,9 +6,10 @@ end. Subsequent tasks (P3-T2..T6) replace each placeholder with real logic.
 
 from __future__ import annotations
 
+from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
-from repo_expert.agent.llm import chat, chat_json
+from repo_expert.agent.llm import chat_json, chat_stream
 from repo_expert.agent.state import AgentState
 from repo_expert.config.instance import get_instance_config
 from repo_expert.config.settings import get_settings
@@ -111,12 +112,21 @@ def generate_node(state: AgentState) -> AgentState:
     sources = _format_sources(results)
     scope = get_instance_config().scope_prompt
     system = f"{_GENERATE_SYSTEM}\n\n{scope}" if scope else _GENERATE_SYSTEM
-    answer = chat(
+    citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
+    # Under /ask/stream the writer relays each piece to the browser as it is
+    # written; under a plain invoke() it is a no-op, so /ask is unchanged. The
+    # citations go first so [n] markers can become links while the text arrives.
+    write = get_stream_writer()
+    write({"event": "draft", "citations": [c.model_dump(mode="json") for c in citations]})
+    parts: list[str] = []
+    for piece in chat_stream(
         system,
         f"Sources:\n{sources}\n\nQuestion: {state['question']}",
         history=state.get("history") or [],
-    )
-    citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
+    ):
+        parts.append(piece)
+        write({"event": "delta", "text": piece})
+    answer = "".join(parts)
     return {"draft": answer, "answer": answer, "citations": citations}
 
 

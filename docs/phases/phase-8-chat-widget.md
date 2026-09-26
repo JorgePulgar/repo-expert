@@ -203,6 +203,23 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - Also simplifies a later streaming endpoint: no answer is ever replaced after the
     visitor has started reading it.
   - DoD: edge unit tests for both cases; no revision observed on the portfolio instance.
+- [ ] **P8-T10** — `POST /ask/stream`: the same answer, streamed while it is written.
+  - Commit: `feat(p8): stream answers as server-sent events [P8-T10]`
+  - Why: the visitor saw nothing for the whole answer (~15-17s). Most of it is the
+    model writing, which can be shown as it happens at no extra cost or quality change.
+  - Same graph: `generate_node` streams from the model and writes each piece through
+    LangGraph's `get_stream_writer()`; `stream_ask` relays those plus stage updates. Under
+    `/ask`'s `invoke()` the writer is a no-op, so `/ask` is unchanged.
+  - Events: `stage`, `draft` (citations, before the text), `delta`, `done` (the full `/ask`
+    body, authoritative) or `error` (`busy` = Azure TPM quota, `content_filter` = prompt
+    blocked by Azure, `internal`). A failure after the 200 cannot be an HTTP status.
+  - Same per-IP rate limit as `/ask`. `Cache-Control: no-transform` and
+    `X-Accel-Buffering: no` so no proxy buffers the stream.
+  - Measured locally against live Azure + Qdrant: first text at 7-12s (the model reasons
+    before its first word), text complete at 12-14s, `done` with the verdict at 17-19s.
+  - DoD: unit tests (event order through the real graph; SSE encoding; error kinds);
+    verified in production with `curl -N` that events arrive incrementally through the
+    Container Apps ingress.
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

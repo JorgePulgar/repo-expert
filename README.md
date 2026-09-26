@@ -133,12 +133,15 @@ uv run repo-expert provision
 uv run repo-expert ingest
 uv run repo-expert --instance portfolio ingest   # portfolio instance
 
-# 2. Serve the API (GET /health, POST /ask; interactive docs at /docs)
+# 2. Serve the API (GET /health, POST /ask, POST /ask/stream; docs at /docs)
 uv run uvicorn repo_expert.api.app:app --reload
 
 # 3. Ask
 curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "How does FastAPI handle dependency injection?"}'
+
+# ...or watch it being written (server-sent events)
+curl -N localhost:8000/ask/stream -H 'content-type: application/json' \n  -d '{"question": "How does FastAPI handle dependency injection?"}'
 ```
 
 `GET /health` reports the active instance, target repo, and per-index document counts.

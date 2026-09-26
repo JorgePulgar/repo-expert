@@ -96,8 +96,10 @@ vector store; the agent is the brain.
 3. **generate** — answers using only the numbered sources, citing inline as `[n]`.
    The instance `scope_prompt` (if any) is appended to scope answers.
 4. **grounding** — an LLM verifies every claim is supported by the sources.
-5. **fallback** — if ungrounded and attempts remain, widen the route to all sources and
-   loop back to retrieve. Otherwise end.
+5. **fallback** — if ungrounded and the route does not yet cover every source, widen it
+   and loop back to retrieve. Otherwise end, returning the draft flagged
+   `grounded: false`. A revision over the same sources would only re-roll the draft, so
+   it is skipped: measured, it never fixed an answer and cost 10–20s (P8-T9).
 
 ---
 
@@ -126,8 +128,10 @@ graph TD;
 	classDef last fill:#bfb6fc
 ```
 
-The corrective loop (`grounding → fallback → retrieve`) runs at most `MAX_ATTEMPTS = 2`
-times before answering with the best draft.
+The corrective loop (`grounding → fallback → retrieve`) runs only while the fallback can
+widen the route, capped at `MAX_ATTEMPTS = 2`. In the portfolio instance (one source) it
+never runs; in the public instance it adds the live issues tool when the router chose
+only the knowledge base.
 
 ---
 

@@ -22,8 +22,9 @@ Scale-to-zero means the first request after an idle period takes a few seconds t
 ## What it does
 
 A FastAPI `/ask` endpoint hands the question to a **LangGraph** agent that
-routes → retrieves → generates with citations → self-checks grounding → falls back and
-retries if the answer isn't supported. Retrieval runs **vector search over Qdrant Cloud**
+routes → retrieves → generates with citations → self-checks grounding → widens the
+search to the remaining sources if the answer isn't supported (or flags it as unverified
+when there is nothing left to widen). Retrieval runs **vector search over Qdrant Cloud**
 collections built from our own custom-chunked content, fused across docs/code/career. The
 agent owns the reasoning and the fusion; the managed service owns vector storage +
 embedding (build-vs-buy — see [`ARCHITECTURE.md`](ARCHITECTURE.md)).

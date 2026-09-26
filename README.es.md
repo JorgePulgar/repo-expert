@@ -26,8 +26,9 @@ despertar el contenedor.
 ## Qué hace
 
 Un endpoint `/ask` de FastAPI entrega la pregunta a un agente **LangGraph** que
-enruta → recupera → genera con citas → autoverifica la fundamentación → reintenta con un
-fallback si la respuesta no está respaldada. La recuperación ejecuta **búsqueda vectorial
+enruta → recupera → genera con citas → autoverifica la fundamentación → amplía la
+búsqueda a las fuentes restantes si la respuesta no está respaldada (o la marca como no
+verificada cuando no queda nada que ampliar). La recuperación ejecuta **búsqueda vectorial
 sobre colecciones de Qdrant Cloud** construidas a partir de nuestro propio contenido con
 fragmentación personalizada, fusionadas entre docs/código/carrera. El agente es el dueño
 del razonamiento y de la fusión; el servicio gestionado es el dueño del almacenamiento

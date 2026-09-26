@@ -114,6 +114,17 @@ def test_after_grounding_ends_when_grounded() -> None:
     assert _after_grounding({"grounded": True, "attempts": 0}) == "end"
 
 
-def test_after_grounding_revises_then_stops_at_max() -> None:
-    assert _after_grounding({"grounded": False, "attempts": 0}) == "revise"
-    assert _after_grounding({"grounded": False, "attempts": MAX_ATTEMPTS}) == "end"
+def test_after_grounding_revises_when_route_can_widen(monkeypatch) -> None:
+    monkeypatch.setattr(graph, "available_sources", lambda cfg: ["kb", "issues"])
+    state = {"grounded": False, "attempts": 0, "route": ["kb"]}
+    assert _after_grounding(state) == "revise"
+    assert _after_grounding({**state, "attempts": MAX_ATTEMPTS}) == "end"
+
+
+def test_after_grounding_ends_when_nothing_left_to_widen(monkeypatch) -> None:
+    # Single-source instance (portfolio): a revision would only re-roll the draft.
+    monkeypatch.setattr(graph, "available_sources", lambda cfg: ["kb"])
+    assert _after_grounding({"grounded": False, "attempts": 0, "route": ["kb"]}) == "end"
+    monkeypatch.setattr(graph, "available_sources", lambda cfg: ["kb", "issues"])
+    state = {"grounded": False, "attempts": 1, "route": ["kb", "issues"]}
+    assert _after_grounding(state) == "end"

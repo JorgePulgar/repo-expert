@@ -150,10 +150,18 @@ def fallback_node(state: AgentState) -> AgentState:
 # --- Edge logic ----------------------------------------------------------------
 
 def _after_grounding(state: AgentState) -> str:
-    """End if the draft is grounded or we've exhausted attempts; else revise."""
+    """Revise only when the fallback can widen the search; otherwise end.
+
+    Once the route already covers every source, a revision retrieves the same
+    chunks and only asks for a second draft. Measured on the portfolio instance
+    (one source, so every revision was one of these): 5 revisions across ~150
+    questions, none turned an unsupported answer into a supported one, and each
+    added 10-20s. An ungrounded answer is returned as is, flagged by `grounded`.
+    """
     if state.get("grounded") or state.get("attempts", 0) >= MAX_ATTEMPTS:
         return "end"
-    return "revise"
+    unused = set(available_sources(get_instance_config())) - set(state.get("route", []))
+    return "revise" if unused else "end"
 
 
 def build_graph():

@@ -190,6 +190,19 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     `GROUNDING_REASONING_EFFORT`; empty restores the deployment default.
   - DoD: unit tests for the effort pass-through; eval re-run after deploy shows
     faithfulness and self-grounding unchanged; answer latency measured in production.
+- [ ] **P8-T9** — Revise only when the fallback can widen the search.
+  - Commit: `perf(p8): skip revisions that cannot widen the search [P8-T9]`
+  - Why: the portfolio instance has one source, so `fallback_node` "widened" `["kb"]` to
+    `["kb"]` — every revision re-ran the same retrieval and re-rolled the draft. Across
+    the runs above it fired 5 times, turned no unsupported answer into a supported one
+    (all 5 first drafts were already faithful per the referee), and each added 10–20s.
+    The widget's "búsqueda ampliada" badge was therefore wrong in this instance too.
+  - Now `_after_grounding` revises only while some source is unused; otherwise the draft
+    is returned with `grounded: false` (widget badge "respuesta no verificada"). The
+    public instance keeps its useful case: kb-only route widened with live issues.
+  - Also simplifies a later streaming endpoint: no answer is ever replaced after the
+    visitor has started reading it.
+  - DoD: edge unit tests for both cases; no revision observed on the portfolio instance.
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

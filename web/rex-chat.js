@@ -11,6 +11,13 @@
  *     -> {answer, citations[], route[], grounded, fallback_used}
  *        citations[i] = {title, url, file_path?, section_path[], start_line?, end_line?}
  *        `answer` carries inline [n] markers, 1-based, into citations[n-1].
+ *   POST /ask/stream  same body -> server-sent events, in order:
+ *        stage {stage}      what the agent is doing: retrieve | generate | verify | widen
+ *        draft {citations}  sources for the text that follows (a second one replaces it)
+ *        delta {text}       answer text as the model writes it
+ *        done  {...}        the full /ask response; authoritative over the deltas
+ *        error {kind}       busy | content_filter | internal
+ *     Used when available; a backend without it (404) falls back to /ask.
  *   GET /health -> liveness; NOT rate-limited, so it is safe as a warm-up ping.
  *
  * The service is stateless: it keeps no conversation, so this client owns the
@@ -50,6 +57,12 @@
     // is asleep. After that it is awake, so repeating it would be a lie.
     waking: "Despertando el servidor (duerme cuando no se usa)…",
     waitingAgain: "No estoy roto, estoy pensando…",
+    stages: {
+      retrieve: "Buscando en el índice…",
+      generate: "Redactando la respuesta…",
+      verify: "Comprobando la respuesta con las fuentes…",
+      widen: "Ampliando la búsqueda…"
+    },
     sources: "Fuentes",
     noSources: "Sin fuentes citadas.",
     moreSources: function (n) { return "Ver las " + n + " fuentes ↓"; },
@@ -59,6 +72,8 @@
     errorGeneric: "No he podido responder. Inténtalo de nuevo en unos segundos.",
     errorNetwork: "No se puede contactar con el servidor. Puede estar arrancando; reinténtalo.",
     errorTimeout: "El servidor ha tardado demasiado. Reinténtalo.",
+    errorBusy: "Hay mucha demanda ahora mismo. Reinténtalo en unos segundos.",
+    errorFiltered: "No puedo responder a eso. Pregúntame por la experiencia o los proyectos de Jorge.",
     rateLimited: function (mins) {
       return "Has alcanzado el límite de preguntas por hora. Vuelve a intentarlo en " +
         mins + " minuto(s).";
@@ -141,6 +156,117 @@
     });
     return safe.split(/\n{2,}/).map(renderBlock).join("");
   }
+
+  /* While text is still arriving, hide a citation marker that has not closed yet
+     ("[1" of "[12]"), so it does not flash as literal text before becoming a link. */
+  function trimPartialMarker(text) {
+    return text.replace(/\[\d{0,2}$/, "");
+  }
+
+  /* Server-sent events parser for a fetch() body (EventSource cannot POST). Feed it
+     decoded text in any chunking; it calls onEvent(name, data) per complete event. */
+  function createSSEParser(onEvent) {
+    var buffer = "";
+    return function feed(chunk) {
+      buffer += chunk.replace(/\r\n/g, "\n");
+      var end;
+      while ((end = buffer.indexOf("\n\n")) !== -1) {
+        var block = buffer.slice(0, end);
+        buffer = buffer.slice(end + 2);
+        var name = "message";
+        var data = [];
+        block.split("\n").forEach(function (line) {
+          if (line.indexOf("event:") === 0) name = line.slice(6).trim();
+          else if (line.indexOf("data:") === 0) data.push(line.slice(5).replace(/^ /, ""));
+        });
+        if (!data.length) continue;
+        var parsed;
+        try {
+          parsed = JSON.parse(data.join("\n"));
+        } catch (err) {
+          continue;  /* a malformed event is skipped, not fatal */
+        }
+        onEvent(name, parsed);
+      }
+    };
+  }
+
+  /* How many characters to reveal on the next frame. The model delivers text in
+     bursts; showing each burst as it lands reads as jumps. Revealing a fraction of
+     the backlog per frame gives a steady pace that speeds up when text piles up and
+     never falls far behind. */
+  function typingStep(backlog) {
+    return Math.max(2, Math.ceil(backlog / 6));
+  }
+
+  /* Reveals streamed text into `bubble` a few characters per frame. finish() resolves
+     once everything received has been shown. */
+  function createTyper(bubble) {
+    var target = "";
+    var shown = 0;
+    var citations = [];
+    var frame = null;
+    var whenCaughtUp = null;
+    var reduceMotion = typeof window !== "undefined" && window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function paint() {
+      bubble.innerHTML = renderAnswer(trimPartialMarker(target.slice(0, shown)), citations);
+    }
+
+    function tick() {
+      frame = null;
+      var backlog = target.length - shown;
+      if (backlog > 0) {
+        // Hidden tabs get no animation frames; don't leave the text stuck there.
+        shown += (reduceMotion || document.hidden) ? backlog : typingStep(backlog);
+        paint();
+      }
+      if (shown < target.length) {
+        frame = requestAnimationFrame(tick);
+      } else if (whenCaughtUp) {
+        var resolve = whenCaughtUp;
+        whenCaughtUp = null;
+        resolve();
+      }
+    }
+
+    function schedule() {
+      if (frame === null) frame = requestAnimationFrame(tick);
+    }
+
+    return {
+      started: function () { return target.length > 0; },
+      reset: function (nextCitations) {
+        target = "";
+        shown = 0;
+        citations = nextCitations || [];
+        bubble.innerHTML = "";
+      },
+      push: function (text) {
+        target += text;
+        schedule();
+      },
+      finish: function (finalText) {
+        // The final answer is authoritative; normally it equals what was streamed.
+        if (finalText !== target) {
+          target = finalText;
+          shown = Math.min(shown, target.length);
+        }
+        return new Promise(function (resolve) {
+          if (document.hidden) shown = target.length;
+          whenCaughtUp = resolve;
+          if (frame !== null) cancelAnimationFrame(frame);
+          frame = null;
+          tick();
+        });
+      }
+    };
+  }
+
+  var CAN_STREAM = typeof ReadableStream !== "undefined" &&
+    typeof TextDecoder !== "undefined" &&
+    typeof ReadableStream.prototype.getReader === "function";
 
   function citationLabel(citation) {
     var bits = [];
@@ -245,6 +371,8 @@
 
     var busy = false;
     var hasWokenUp = false;   // the cold start only happens once per session
+    // data-stream="off" forces the plain /ask request (e.g. to compare the two).
+    var streamOn = CAN_STREAM && root.getAttribute("data-stream") !== "off";
     // The server keeps no session, so the client owns the conversation and sends
     // the recent turns with every question. Capped to match the API's limit and to
     // keep the prompt from crowding out retrieved sources.
@@ -349,7 +477,8 @@
         return;
       }
 
-      addMessage("user", TEXT.you).textContent = question;
+      var questionBubble = addMessage("user", TEXT.you);
+      questionBubble.textContent = question;
       input.value = "";
       setBusy(true);
       setStatus(TEXT.thinking, { spinner: true });
@@ -363,36 +492,79 @@
 
       var controller = new AbortController();
       var timeoutTimer = setTimeout(function () { controller.abort(); }, DEFAULTS.timeoutMs);
+      var body = JSON.stringify({
+        question: question,
+        history: turns.slice(-DEFAULTS.historyTurns)
+      });
 
-      fetch(api + "/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: question,
-          history: turns.slice(-DEFAULTS.historyTurns)
-        }),
-        signal: controller.signal
-      })
-        .then(function (response) {
-          if (response.status === 429) {
-            var retryAfter = parseInt(response.headers.get("Retry-After") || "0", 10);
-            var mins = retryAfter ? Math.ceil(retryAfter / 60) : 60;
-            var err = new Error("rate-limited");
-            err.userMessage = TEXT.rateLimited(mins);
-            throw err;
+      var bubble = null;
+      var typer = null;
+
+      /* Scroll once, so the question sits at the top of the log and the answer starts
+         right below it; then leave the scrolling to the reader. Following the text
+         down as it arrives would move the lines they are reading out of view. */
+      function startAnswer() {
+        bubble = addMessage("assistant", TEXT.assistant);
+        var row = questionBubble.parentNode;
+        log.scrollTop = row.getBoundingClientRect().top -
+          log.getBoundingClientRect().top + log.scrollTop - 8;
+      }
+
+      function awake() {
+        // Any response means the container is up: stop the "waking" message.
+        clearTimeout(wakingTimer);
+      }
+
+      var handlers = {
+        open: awake,
+        stage: function (data) {
+          var message = TEXT.stages[data.stage];
+          // Before the text starts, every stage is news. Once it is on screen, only
+          // the check that follows it and a widened search are worth interrupting.
+          if (message && (!typer || data.stage === "verify" || data.stage === "widen")) {
+            setStatus(message, { spinner: true });
           }
-          if (!response.ok) throw new Error("HTTP " + response.status);
-          return response.json();
-        })
+        },
+        draft: function (data) {
+          if (!bubble) {
+            startAnswer();
+            typer = createTyper(bubble);
+            log.setAttribute("aria-busy", "true");
+          }
+          typer.reset(data.citations);  // a second draft (widened search) replaces the first
+        },
+        delta: function (data) {
+          if (typer) {
+            if (!typer.started()) setStatus("");
+            typer.push(data.text || "");
+          }
+        }
+      };
+
+      var answer = streamOn
+        ? askStream(body, controller.signal, handlers).then(function (data) {
+            if (data) return data;
+            streamOn = false;  // backend predates /ask/stream: stop trying this session
+            return askJson(body, controller.signal);
+          })
+        : askJson(body, controller.signal);
+
+      answer
         .then(function (data) {
-          var bubble = addMessage("assistant", TEXT.assistant);
-          bubble.innerHTML = renderAnswer(data.answer || "", data.citations);
-          turns.push({ question: question, answer: data.answer || "" });
-          renderSources(bubble, data);
-          log.scrollTop = log.scrollHeight;
-          setStatus("");
+          awake();
+          if (!bubble) startAnswer();
+          var shown = typer ? typer.finish(data.answer || "") : Promise.resolve();
+          return shown.then(function () {
+            bubble.innerHTML = renderAnswer(data.answer || "", data.citations);
+            turns.push({ question: question, answer: data.answer || "" });
+            renderSources(bubble, data);
+            setStatus("");
+          });
         })
         .catch(function (error) {
+          // A half-written answer that never passed the check should not stay on
+          // screen as if it were one.
+          if (bubble && bubble.parentNode) bubble.parentNode.parentNode.removeChild(bubble.parentNode);
           var message = error.userMessage ||
             (error.name === "AbortError" ? TEXT.errorTimeout :
               (error instanceof TypeError ? TEXT.errorNetwork : TEXT.errorGeneric));
@@ -401,10 +573,78 @@
         .then(function () {
           clearTimeout(wakingTimer);
           clearTimeout(timeoutTimer);
+          log.removeAttribute("aria-busy");
           hasWokenUp = true;
           setBusy(false);
           input.focus();
         });
+    }
+
+    function checkResponse(response) {
+      if (response.status === 429) {
+        var retryAfter = parseInt(response.headers.get("Retry-After") || "0", 10);
+        var mins = retryAfter ? Math.ceil(retryAfter / 60) : 60;
+        var err = new Error("rate-limited");
+        err.userMessage = TEXT.rateLimited(mins);
+        throw err;
+      }
+      if (!response.ok) throw new Error("HTTP " + response.status);
+    }
+
+    function askJson(body, signal) {
+      return fetch(api + "/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body,
+        signal: signal
+      }).then(function (response) {
+        checkResponse(response);
+        return response.json();
+      });
+    }
+
+    /* Resolves with the `done` payload, or with null when the backend has no
+       streaming endpoint yet (the caller then falls back to /ask). A 404 is answered
+       before the rate limiter runs, so probing costs the visitor nothing. */
+    function askStream(body, signal, on) {
+      return fetch(api + "/ask/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
+        body: body,
+        signal: signal
+      }).then(function (response) {
+        if (response.status === 404 || response.status === 405) return null;
+        checkResponse(response);
+        on.open();
+
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        var final = null;
+        var failure = null;
+        var feed = createSSEParser(function (name, data) {
+          if (name === "done") final = data;
+          else if (name === "error") failure = data.kind || "internal";
+          else if (on[name]) on[name](data);
+        });
+
+        function pump() {
+          return reader.read().then(function (chunk) {
+            if (!chunk.done) {
+              feed(decoder.decode(chunk.value, { stream: true }));
+              return pump();
+            }
+            feed(decoder.decode());
+            if (failure || !final) {
+              var err = new Error("stream " + (failure || "ended early"));
+              err.userMessage = failure === "busy" ? TEXT.errorBusy :
+                (failure === "content_filter" ? TEXT.errorFiltered : TEXT.errorGeneric);
+              throw err;
+            }
+            return final;
+          });
+        }
+        return pump();
+      });
     }
 
     form.addEventListener("submit", function (event) {
@@ -451,6 +691,10 @@
   /* Exposed for unit tests under `node --test`; `module` is undefined in a browser,
      so this is inert when the file is loaded with a <script> tag. */
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { escapeHtml: escapeHtml, renderAnswer: renderAnswer, citationLabel: citationLabel, renderInline: renderInline };
+    module.exports = {
+      escapeHtml: escapeHtml, renderAnswer: renderAnswer, citationLabel: citationLabel,
+      renderInline: renderInline, createSSEParser: createSSEParser,
+      trimPartialMarker: trimPartialMarker, typingStep: typingStep
+    };
   }
 })();

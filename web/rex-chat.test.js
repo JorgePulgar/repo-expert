@@ -1,4 +1,4 @@
-/* Unit tests for the pure rendering helpers.  Run: node --test web/
+/* Unit tests for the pure rendering helpers.  Run: node --test web/rex-chat.test.js
  *
  * The answer text comes from an LLM, so it is untrusted input that we turn into
  * HTML — escaping is the part worth testing.
@@ -7,7 +7,10 @@
 const test = require("node:test");
 const assert = require("node:assert");
 
-const { escapeHtml, renderAnswer, citationLabel, renderInline } = require("./rex-chat.js");
+const {
+  escapeHtml, renderAnswer, citationLabel, renderInline,
+  createSSEParser, trimPartialMarker, typingStep
+} = require("./rex-chat.js");
 
 test("escapeHtml neutralises markup", () => {
   assert.strictEqual(
@@ -112,4 +115,40 @@ test("citations still link inside list items", () => {
 
 test("plain prose keeps its shape", () => {
   assert.strictEqual(renderAnswer("uno\n\ndos", []), "<p>uno</p><p>dos</p>");
+});
+
+/* --- streaming ---------------------------------------------------------------- */
+
+function collect() {
+  const events = [];
+  const feed = createSSEParser((name, data) => events.push([name, data]));
+  return { events, feed };
+}
+
+test("SSE parser reassembles events split across chunks", () => {
+  const { events, feed } = collect();
+  feed('event: draft\ndata: {"citations":[]}\n\nevent: del');
+  feed('ta\ndata: {"text":"Ho"}\n');
+  feed('\nevent: delta\ndata: {"text":"la"}\n\n');
+  assert.deepStrictEqual(events, [
+    ["draft", { citations: [] }], ["delta", { text: "Ho" }], ["delta", { text: "la" }]
+  ]);
+});
+
+test("SSE parser keeps multibyte text and skips malformed events", () => {
+  const { events, feed } = collect();
+  feed('event: delta\ndata: {"text":"añadió — ✓"}\n\nevent: delta\ndata: {oops\n\n');
+  feed('event: done\r\ndata: {"answer":"x"}\r\n\r\n');
+  assert.deepStrictEqual(events, [["delta", { text: "añadió — ✓" }], ["done", { answer: "x" }]]);
+});
+
+test("an unfinished citation marker is hidden until it closes", () => {
+  assert.strictEqual(trimPartialMarker("usa FastAPI ["), "usa FastAPI ");
+  assert.strictEqual(trimPartialMarker("usa FastAPI [1"), "usa FastAPI ");
+  assert.strictEqual(trimPartialMarker("usa FastAPI [1]"), "usa FastAPI [1]");
+});
+
+test("typing speeds up with the backlog but always moves", () => {
+  assert.strictEqual(typingStep(1), 2);
+  assert.ok(typingStep(600) >= 100);
 });

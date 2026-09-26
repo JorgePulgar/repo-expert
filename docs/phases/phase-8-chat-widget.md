@@ -220,6 +220,25 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - DoD: unit tests (event order through the real graph; SSE encoding; error kinds);
     verified in production with `curl -N` that events arrive incrementally through the
     Container Apps ingress.
+- [ ] **P8-T11** — Widget: show the answer as it is written.
+  - Commit: `feat(p8): type out streamed answers in the chat widget [P8-T11]`
+  - Uses `/ask/stream` when the browser can read a response stream; on `404` (backend not
+    yet deployed) falls back to `/ask` for the rest of the session. That 404 is served
+    before the rate limiter, so probing is free. `data-stream="off"` forces `/ask`.
+  - Text is revealed a fraction of the backlog per frame, so bursts read as steady typing;
+    an unclosed `[1` marker is held back until it becomes a link; `prefers-reduced-motion`
+    and hidden tabs skip the animation. Status line follows the stages (buscando,
+    redactando, comprobando). `aria-busy` on the log while streaming so screen readers
+    announce the finished answer, not every frame.
+  - A half-written answer is removed if the stream fails; `busy` and `content_filter`
+    get their own messages.
+  - Scrolling: when the answer starts, the log scrolls once so the question sits at the
+    top and the answer begins below it; after that nothing moves on its own. The first
+    version followed the text down, which pushed the lines being read out of view.
+  - DoD: `node --test web/rex-chat.test.js` (SSE parser across chunk boundaries, marker
+    trimming, pacing); verified in a browser against the local backend and, after
+    deploy, on the site. `jorge-pulgar-web` must copy the new `rex-chat.js` (no CSP
+    change: same origin as `/ask`).
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

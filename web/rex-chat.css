@@ -241,14 +241,34 @@
 
 /* ---------- starters ---------- */
 
+.rex-starters-box { display: flex; flex-direction: column; }
+
+/* The summary is the dropdown toggle on phones and a plain label elsewhere. */
 .rex-starters-label {
   font-family: var(--rex-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--rex-muted);
-  margin-bottom: -0.4rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
 }
+.rex-starters-label::-webkit-details-marker { display: none; }
+.rex-starters-label::after {
+  content: "";
+  width: 0.4rem; height: 0.4rem;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: translateY(-0.12rem) rotate(45deg);
+  transition: transform 0.15s ease;
+}
+.rex-starters-box[open] > .rex-starters-label::after { transform: translateY(0.08rem) rotate(-135deg); }
+.rex-starters-label:hover { color: var(--rex-text); }
+.rex-starters-box[open] > .rex-starters { margin-top: 0.5rem; }
 
 .rex-starters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
@@ -334,6 +354,17 @@
 
 .rex-status-error { color: var(--rex-danger); }
 
+/* Messages ease in rather than popping into place. */
+.rex-msg { animation: rex-in 0.28s ease-out both; }
+@keyframes rex-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* An empty status line should not leave a gap under the composer. It stays in the
+   DOM (it is the aria-live region); it just stops taking space until it has text. */
+.rex-status:empty { min-height: 0; margin-top: -1.1rem; }
+
 .rex-spinner {
   width: 0.75rem;
   height: 0.75rem;
@@ -350,6 +381,7 @@
 @keyframes rex-spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
+  .rex-msg { animation: none; }
   .rex-spinner { animation-duration: 3s; }
   .rex-log { scroll-behavior: auto; }
 }
@@ -375,6 +407,29 @@
   .rex-form { flex-direction: row; gap: 0.45rem; }
   .rex-input { min-height: 2.75rem; padding: 0.65rem 0.75rem; font-size: 0.88rem; }
   .rex-send { padding: 0.75rem 1rem; font-size: 0.85rem; }
+  .rex-status:empty { margin-top: -0.62rem; }
+}
+
+/* Phones: the header hint goes (the page around the chat already says it), and the
+   starters, now a dropdown, list the full questions one per line — easier to tap
+   and to read than three truncated chips. */
+@media (max-width: 600px) {
+  .rex-head-hint { display: none; }
+  .rex-head { padding-bottom: 0.45rem; }
+  .rex-starters { flex-direction: column; align-items: stretch; gap: 0.35rem; }
+  .rex-starter { text-align: left; padding: 0.55rem 0.7rem; font-size: 0.82rem; }
+  .rex-starter-long { display: inline; }
+  .rex-starter-short { display: none; }
+
+  /* Once a conversation starts, the card takes the whole screen so there is room to
+     read. The host sets --rex-fill-offset to the height of its fixed bars (plus a
+     little air); 100svh is the height with the browser's toolbars showing. */
+  .rex-chat.rex-active {
+    height: calc(100vh - var(--rex-fill-offset, 2rem));
+    height: calc(100svh - var(--rex-fill-offset, 2rem));
+    min-height: 22rem;
+  }
+  .rex-chat.rex-active .rex-log { flex: 1 1 auto; min-height: 0; max-height: none; }
 }
 
 /* Very narrow phones: a side-by-side composer would squeeze the input too far. */

@@ -6,6 +6,9 @@
  *   <div id="rex-chat" data-api="https://ca-repo-expert.example.azurecontainerapps.io"></div>
  *   <script src="rex-chat.js"></script>
  *
+ * Optional attributes on the mount div: data-starters (JSON list of starter
+ * questions) and data-hint (header hint text; empty string hides it).
+ *
  * Contract (see repo-expert/src/repo_expert/api/schemas.py):
  *   POST /ask  {question, history: [{question, answer}, ...]}
  *     -> {answer, citations[], route[], grounded, fallback_used}
@@ -46,8 +49,8 @@
     headLabel: "Chat en vivo",
     headHint: "Pregunta aquí — debajo del chat explico cómo funciona y qué límites tiene.",
     emptyTitle: "Pregúntame sobre la experiencia y los proyectos de Jorge.",
-    emptyBody: "Responde con citas que enlazan al documento exacto. Empieza por una de estas:",
-    startersLabel: "Prueba con",
+    emptyBody: "Responde con citas que enlazan al documento exacto. Tienes preguntas sugeridas justo debajo.",
+    startersLabel: "Preguntas sugeridas",
     placeholder: "Escribe tu pregunta…",
     send: "Enviar",
     you: "Tú",
@@ -284,6 +287,10 @@
     return bits.join(" · ");
   }
 
+  function matches(query) {
+    return !!(window.matchMedia && window.matchMedia(query).matches);
+  }
+
   function RexChat(root) {
     var api = (root.getAttribute("data-api") || "").replace(/\/+$/, "");
     if (!api) {
@@ -320,7 +327,11 @@
     headLabel.appendChild(el("span", "rex-dot"));
     headLabel.appendChild(el("span", null, TEXT.headLabel));
     head.appendChild(headLabel);
-    head.appendChild(el("div", "rex-head-hint", TEXT.headHint));
+    /* The default hint describes a page that explains the chat below it. A host
+       page with a different layout overrides it with data-hint; an empty value
+       drops the hint altogether. */
+    var hint = root.hasAttribute("data-hint") ? root.getAttribute("data-hint") : TEXT.headHint;
+    if (hint) head.appendChild(el("div", "rex-head-hint", hint));
 
     var log = el("div", "rex-log");
     log.setAttribute("role", "log");
@@ -334,8 +345,16 @@
     empty.appendChild(el("span", "rex-empty-body", TEXT.emptyBody));
     log.appendChild(empty);
 
-    var startersLabel = el("div", "rex-starters-label", TEXT.startersLabel);
+    /* Phones get the starters as a collapsed dropdown: open, the three full
+       questions stacked take more height than the conversation itself. Wider
+       screens keep them open as a row of chips. */
+    var compact = matches("(max-width: 600px)");
+    var startersBox = el("details", "rex-starters-box");
+    startersBox.open = !compact;
+    var startersLabel = el("summary", "rex-starters-label", TEXT.startersLabel);
     var starterBar = el("div", "rex-starters");
+    startersBox.appendChild(startersLabel);
+    startersBox.appendChild(starterBar);
     starters.forEach(function (starter) {
       var button = el("button", "rex-starter");
       button.type = "button";
@@ -345,7 +364,10 @@
       button.setAttribute("title", starter.q);
       button.appendChild(el("span", "rex-starter-long", starter.q));
       button.appendChild(el("span", "rex-starter-short", starter.short));
-      button.addEventListener("click", function () { submit(starter.q); });
+      button.addEventListener("click", function () {
+        if (compact) startersBox.open = false;
+        submit(starter.q);
+      });
       starterBar.appendChild(button);
     });
 
@@ -364,11 +386,11 @@
 
     root.appendChild(head);
     root.appendChild(log);
-    root.appendChild(startersLabel);
-    root.appendChild(starterBar);
+    root.appendChild(startersBox);
     root.appendChild(form);
     root.appendChild(status);
 
+    var touch = matches("(pointer: coarse)");
     var busy = false;
     var hasWokenUp = false;   // the cold start only happens once per session
     // data-stream="off" forces the plain /ask request (e.g. to compare the two).
@@ -396,8 +418,22 @@
       status.appendChild(el("span", null, message));
     }
 
+    /* Bring the whole card into view: centred when it fits the screen, otherwise
+       aligned to its bottom so the latest message and the composer both show. The
+       host page's scroll-padding keeps it clear of fixed headers and bottom bars. */
+    function revealCard() {
+      if (!root.scrollIntoView) return;
+      var fits = root.getBoundingClientRect().height <= window.innerHeight * 0.85;
+      root.scrollIntoView({
+        block: fits ? "center" : "end",
+        behavior: matches("(prefers-reduced-motion: reduce)") ? "auto" : "smooth"
+      });
+    }
+
     function addMessage(role, roleLabel) {
       if (empty && empty.parentNode) empty.parentNode.removeChild(empty);
+      // First message: from here on phones give the card the full screen height.
+      root.classList.add("rex-active");
       var wrap = el("div", "rex-msg rex-msg-" + role);
       wrap.appendChild(el("div", "rex-msg-role", roleLabel));
       var bubble = el("div", "rex-bubble");
@@ -480,6 +516,10 @@
       var questionBubble = addMessage("user", TEXT.you);
       questionBubble.textContent = question;
       input.value = "";
+      input.style.height = "";
+      // On touch screens drop the keyboard, so the answer has the screen to itself.
+      if (touch) input.blur();
+      revealCard();
       setBusy(true);
       setStatus(TEXT.thinking, { spinner: true });
 
@@ -559,6 +599,7 @@
             turns.push({ question: question, answer: data.answer || "" });
             renderSources(bubble, data);
             setStatus("");
+            revealCard();
           });
         })
         .catch(function (error) {
@@ -576,7 +617,8 @@
           log.removeAttribute("aria-busy");
           hasWokenUp = true;
           setBusy(false);
-          input.focus();
+          // Refocusing would pop the keyboard straight back up over the answer.
+          if (!touch) input.focus();
         });
     }
 

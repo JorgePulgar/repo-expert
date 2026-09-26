@@ -170,7 +170,7 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     docs points and 4 career points** that were still retrievable.
   - Corpus: 2809 chunks (1681 docs · 1062 code · 66 career). Verified in production:
     both questions now answer correctly with citations.
-- [ ] **P8-T8** — Grounding judge at `reasoning_effort="low"`.
+- [x] **P8-T8** — Grounding judge at `reasoning_effort="low"`. **Done 2026-09-26.**
   - Commit: `perf(p8): run the grounding judge at low reasoning effort [P8-T8]`
   - Why: an answer took 16–27s and ~95% of it was gpt-5-mini reasoning at its default
     "medium" effort. The judge alone took 6–12s and up to ~1,000 reasoning tokens
@@ -190,7 +190,10 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     `GROUNDING_REASONING_EFFORT`; empty restores the deployment default.
   - DoD: unit tests for the effort pass-through; eval re-run after deploy shows
     faithfulness and self-grounding unchanged; answer latency measured in production.
-- [ ] **P8-T9** — Revise only when the fallback can widen the search.
+  - Result: deployed as revision `streaming1` (image `p8-streaming-1`). Portfolio eval
+    unchanged — routing 1.0, hit@6 1.0, faithfulness 1.0, self-grounded 1.0. Judge now
+    3.8–6.3s (was 6–12s); a full answer takes ~16s in production.
+- [x] **P8-T9** — Revise only when the fallback can widen the search. **Done 2026-09-26.**
   - Commit: `perf(p8): skip revisions that cannot widen the search [P8-T9]`
   - Why: the portfolio instance has one source, so `fallback_node` "widened" `["kb"]` to
     `["kb"]` — every revision re-ran the same retrieval and re-rolled the draft. Across
@@ -203,7 +206,9 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - Also simplifies a later streaming endpoint: no answer is ever replaced after the
     visitor has started reading it.
   - DoD: edge unit tests for both cases; no revision observed on the portfolio instance.
-- [ ] **P8-T10** — `POST /ask/stream`: the same answer, streamed while it is written.
+  - Result: `fallback_used` false on every production and eval answer since deploy.
+- [x] **P8-T10** — `POST /ask/stream`: the same answer, streamed while it is written.
+  **Done 2026-09-26.**
   - Commit: `feat(p8): stream answers as server-sent events [P8-T10]`
   - Why: the visitor saw nothing for the whole answer (~15-17s). Most of it is the
     model writing, which can be shown as it happens at no extra cost or quality change.
@@ -220,6 +225,9 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - DoD: unit tests (event order through the real graph; SSE encoding; error kinds);
     verified in production with `curl -N` that events arrive incrementally through the
     Container Apps ingress.
+  - Result: in production, 413 deltas spread over 2.6s (not buffered by the ingress),
+    first text at 9.6s, `done` at 16.4s; CORS header present for the site origin;
+    `/ask` unchanged (200, grounded, 12 citations).
 - [ ] **P8-T11** — Widget: show the answer as it is written.
   - Commit: `feat(p8): type out streamed answers in the chat widget [P8-T11]`
   - Uses `/ask/stream` when the browser can read a response stream; on `404` (backend not

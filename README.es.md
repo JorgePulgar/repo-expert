@@ -196,7 +196,7 @@ Reporte completo: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 > sí están actualizados.
 
 **Instancia portfolio** (n=10, preguntas de carrera + repos de portafolio, re-ejecutada el
-2026-09-21): **enrutamiento 1.0, relevancia hit@6 1.0 (carrera 1.0 · mixto 1.0),
+2026-09-26): **enrutamiento 1.0, relevancia hit@6 1.0 (carrera 1.0 · mixto 1.0),
 fidelidad 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Las preguntas fuera
 de tema son rechazadas por la barrera de alcance configurable. La nota de cambio de modelo

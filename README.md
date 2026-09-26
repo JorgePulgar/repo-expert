@@ -183,7 +183,7 @@ Full report: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 > been re-run since the move to `gpt-5-mini`.** Re-running them needs a working
 > `GITHUB_TOKEN` for the live issues source; the portfolio numbers below are current.
 
-**Portfolio instance** (n=10, career + portfolio-repo questions, re-run 2026-09-21):
+**Portfolio instance** (n=10, career + portfolio-repo questions, re-run 2026-09-26):
 **routing 1.0, relevance hit@6 1.0 (career 1.0 · mixed 1.0), faithfulness 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Off-topic questions
 are declined by the config-driven scope guardrail. See the model-change note below for why

@@ -1,6 +1,6 @@
 # Evaluation — portfolio (JorgePulgar/ai-invoice-analyzer)
 
-_Generated 2026-09-21T16:05:33+00:00 · n=10 questions_
+_Generated 2026-09-26T10:36:50+00:00 · n=10 questions_
 
 ## Retrieval
 

@@ -6,11 +6,13 @@ end. Subsequent tasks (P3-T2..T6) replace each placeholder with real logic.
 
 from __future__ import annotations
 
+from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
-from repo_expert.agent.llm import chat, chat_json
+from repo_expert.agent.llm import chat_json, chat_stream
 from repo_expert.agent.state import AgentState
 from repo_expert.config.instance import get_instance_config
+from repo_expert.config.settings import get_settings
 from repo_expert.retrieval.models import RetrievalResult
 from repo_expert.retrieval.registry import available_sources, get_retrievers
 
@@ -110,12 +112,21 @@ def generate_node(state: AgentState) -> AgentState:
     sources = _format_sources(results)
     scope = get_instance_config().scope_prompt
     system = f"{_GENERATE_SYSTEM}\n\n{scope}" if scope else _GENERATE_SYSTEM
-    answer = chat(
+    citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
+    # Under /ask/stream the writer relays each piece to the browser as it is
+    # written; under a plain invoke() it is a no-op, so /ask is unchanged. The
+    # citations go first so [n] markers can become links while the text arrives.
+    write = get_stream_writer()
+    write({"event": "draft", "citations": [c.model_dump(mode="json") for c in citations]})
+    parts: list[str] = []
+    for piece in chat_stream(
         system,
         f"Sources:\n{sources}\n\nQuestion: {state['question']}",
         history=state.get("history") or [],
-    )
-    citations = [r.citation for r in results[:_CONTEXT_LIMIT]]
+    ):
+        parts.append(piece)
+        write({"event": "delta", "text": piece})
+    answer = "".join(parts)
     return {"draft": answer, "answer": answer, "citations": citations}
 
 
@@ -128,6 +139,7 @@ def grounding_node(state: AgentState) -> AgentState:
     data = chat_json(
         _GROUNDING_SYSTEM,
         f"Sources:\n{sources}\n\nAnswer: {draft}",
+        reasoning_effort=get_settings().grounding_reasoning_effort or None,
     )
     return {"grounded": bool(data.get("grounded", False))}
 
@@ -148,10 +160,18 @@ def fallback_node(state: AgentState) -> AgentState:
 # --- Edge logic ----------------------------------------------------------------
 
 def _after_grounding(state: AgentState) -> str:
-    """End if the draft is grounded or we've exhausted attempts; else revise."""
+    """Revise only when the fallback can widen the search; otherwise end.
+
+    Once the route already covers every source, a revision retrieves the same
+    chunks and only asks for a second draft. Measured on the portfolio instance
+    (one source, so every revision was one of these): 5 revisions across ~150
+    questions, none turned an unsupported answer into a supported one, and each
+    added 10-20s. An ungrounded answer is returned as is, flagged by `grounded`.
+    """
     if state.get("grounded") or state.get("attempts", 0) >= MAX_ATTEMPTS:
         return "end"
-    return "revise"
+    unused = set(available_sources(get_instance_config())) - set(state.get("route", []))
+    return "revise" if unused else "end"
 
 
 def build_graph():

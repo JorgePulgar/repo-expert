@@ -170,6 +170,83 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
     docs points and 4 career points** that were still retrievable.
   - Corpus: 2809 chunks (1681 docs · 1062 code · 66 career). Verified in production:
     both questions now answer correctly with citations.
+- [x] **P8-T8** — Grounding judge at `reasoning_effort="low"`. **Done 2026-09-26.**
+  - Commit: `perf(p8): run the grounding judge at low reasoning effort [P8-T8]`
+  - Why: an answer took 16–27s and ~95% of it was gpt-5-mini reasoning at its default
+    "medium" effort. The judge alone took 6–12s and up to ~1,000 reasoning tokens
+    (billed as output) to reply `{"grounded": true}`.
+  - Measured offline (2026-09-26, ~150 runs over three rounds: the 10 eval questions,
+    the 3 starters, follow-ups, and a 24-question adversarial set — false premises,
+    injection, negation, enumeration), each answer checked by a high-effort referee:
+    - judge "low" ≈ "medium": 3 vs 2 false passes, 2 vs 2 false rejections over 152
+      drafts; "minimal" rejected 7 correct answers on the hard set, so it was dropped.
+    - generation "low" was also tested and **rejected**: 71/76 faithful vs 76/76 —
+      it failed enumeration ("all projects using LangGraph"), negation, and false
+      premises. Generation stays at the default.
+    - query rewrite "minimal" was rejected too (quality 7.9 vs 9.0 on rewritten
+      questions). It stays at the default.
+  - Effort is per call (`chat(reasoning_effort=...)`), not global, so the eval judge keeps
+    the effort its numbers were measured at. Configurable via
+    `GROUNDING_REASONING_EFFORT`; empty restores the deployment default.
+  - DoD: unit tests for the effort pass-through; eval re-run after deploy shows
+    faithfulness and self-grounding unchanged; answer latency measured in production.
+  - Result: deployed as revision `streaming1` (image `p8-streaming-1`). Portfolio eval
+    unchanged — routing 1.0, hit@6 1.0, faithfulness 1.0, self-grounded 1.0. Judge now
+    3.8–6.3s (was 6–12s); a full answer takes ~16s in production.
+- [x] **P8-T9** — Revise only when the fallback can widen the search. **Done 2026-09-26.**
+  - Commit: `perf(p8): skip revisions that cannot widen the search [P8-T9]`
+  - Why: the portfolio instance has one source, so `fallback_node` "widened" `["kb"]` to
+    `["kb"]` — every revision re-ran the same retrieval and re-rolled the draft. Across
+    the runs above it fired 5 times, turned no unsupported answer into a supported one
+    (all 5 first drafts were already faithful per the referee), and each added 10–20s.
+    The widget's "búsqueda ampliada" badge was therefore wrong in this instance too.
+  - Now `_after_grounding` revises only while some source is unused; otherwise the draft
+    is returned with `grounded: false` (widget badge "respuesta no verificada"). The
+    public instance keeps its useful case: kb-only route widened with live issues.
+  - Also simplifies a later streaming endpoint: no answer is ever replaced after the
+    visitor has started reading it.
+  - DoD: edge unit tests for both cases; no revision observed on the portfolio instance.
+  - Result: `fallback_used` false on every production and eval answer since deploy.
+- [x] **P8-T10** — `POST /ask/stream`: the same answer, streamed while it is written.
+  **Done 2026-09-26.**
+  - Commit: `feat(p8): stream answers as server-sent events [P8-T10]`
+  - Why: the visitor saw nothing for the whole answer (~15-17s). Most of it is the
+    model writing, which can be shown as it happens at no extra cost or quality change.
+  - Same graph: `generate_node` streams from the model and writes each piece through
+    LangGraph's `get_stream_writer()`; `stream_ask` relays those plus stage updates. Under
+    `/ask`'s `invoke()` the writer is a no-op, so `/ask` is unchanged.
+  - Events: `stage`, `draft` (citations, before the text), `delta`, `done` (the full `/ask`
+    body, authoritative) or `error` (`busy` = Azure TPM quota, `content_filter` = prompt
+    blocked by Azure, `internal`). A failure after the 200 cannot be an HTTP status.
+  - Same per-IP rate limit as `/ask`. `Cache-Control: no-transform` and
+    `X-Accel-Buffering: no` so no proxy buffers the stream.
+  - Measured locally against live Azure + Qdrant: first text at 7-12s (the model reasons
+    before its first word), text complete at 12-14s, `done` with the verdict at 17-19s.
+  - DoD: unit tests (event order through the real graph; SSE encoding; error kinds);
+    verified in production with `curl -N` that events arrive incrementally through the
+    Container Apps ingress.
+  - Result: in production, 413 deltas spread over 2.6s (not buffered by the ingress),
+    first text at 9.6s, `done` at 16.4s; CORS header present for the site origin;
+    `/ask` unchanged (200, grounded, 12 citations).
+- [ ] **P8-T11** — Widget: show the answer as it is written.
+  - Commit: `feat(p8): type out streamed answers in the chat widget [P8-T11]`
+  - Uses `/ask/stream` when the browser can read a response stream; on `404` (backend not
+    yet deployed) falls back to `/ask` for the rest of the session. That 404 is served
+    before the rate limiter, so probing is free. `data-stream="off"` forces `/ask`.
+  - Text is revealed a fraction of the backlog per frame, so bursts read as steady typing;
+    an unclosed `[1` marker is held back until it becomes a link; `prefers-reduced-motion`
+    and hidden tabs skip the animation. Status line follows the stages (buscando,
+    redactando, comprobando). `aria-busy` on the log while streaming so screen readers
+    announce the finished answer, not every frame.
+  - A half-written answer is removed if the stream fails; `busy` and `content_filter`
+    get their own messages.
+  - Scrolling: when the answer starts, the log scrolls once so the question sits at the
+    top and the answer begins below it; after that nothing moves on its own. The first
+    version followed the text down, which pushed the lines being read out of view.
+  - DoD: `node --test web/rex-chat.test.js` (SSE parser across chunk boundaries, marker
+    trimming, pacing); verified in a browser against the local backend and, after
+    deploy, on the site. `jorge-pulgar-web` must copy the new `rex-chat.js` (no CSP
+    change: same origin as `/ask`).
 - [ ] **P8-T5** — Page + integration in `jorge-pulgar-web`, verified end to end.
   - Commit: `docs(p8): chat page integration guide [P8-T5]`
   - DoD: `chat.html` live on the site with explainer copy (what it knows, what to ask,

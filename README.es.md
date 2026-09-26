@@ -26,8 +26,9 @@ despertar el contenedor.
 ## Qué hace
 
 Un endpoint `/ask` de FastAPI entrega la pregunta a un agente **LangGraph** que
-enruta → recupera → genera con citas → autoverifica la fundamentación → reintenta con un
-fallback si la respuesta no está respaldada. La recuperación ejecuta **búsqueda vectorial
+enruta → recupera → genera con citas → autoverifica la fundamentación → amplía la
+búsqueda a las fuentes restantes si la respuesta no está respaldada (o la marca como no
+verificada cuando no queda nada que ampliar). La recuperación ejecuta **búsqueda vectorial
 sobre colecciones de Qdrant Cloud** construidas a partir de nuestro propio contenido con
 fragmentación personalizada, fusionadas entre docs/código/carrera. El agente es el dueño
 del razonamiento y de la fusión; el servicio gestionado es el dueño del almacenamiento
@@ -141,12 +142,15 @@ uv run repo-expert provision
 uv run repo-expert ingest
 uv run repo-expert --instance portfolio ingest   # instancia portfolio
 
-# 2. Servir la API (GET /health, POST /ask; docs interactivas en /docs)
+# 2. Servir la API (GET /health, POST /ask, POST /ask/stream; docs en /docs)
 uv run uvicorn repo_expert.api.app:app --reload
 
 # 3. Preguntar
 curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
+
+# ...o verla mientras se escribe (server-sent events)
+curl -N localhost:8000/ask/stream -H 'content-type: application/json' \n  -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
 ```
 
 `GET /health` reporta la instancia activa, el repositorio objetivo y los conteos de
@@ -192,7 +196,7 @@ Reporte completo: [`docs/eval-results-public.md`](docs/eval-results-public.md).
 > sí están actualizados.
 
 **Instancia portfolio** (n=10, preguntas de carrera + repos de portafolio, re-ejecutada el
-2026-09-21): **enrutamiento 1.0, relevancia hit@6 1.0 (carrera 1.0 · mixto 1.0),
+2026-09-26): **enrutamiento 1.0, relevancia hit@6 1.0 (carrera 1.0 · mixto 1.0),
 fidelidad 1.0**
 ([`docs/eval-results-portfolio.md`](docs/eval-results-portfolio.md)). Las preguntas fuera
 de tema son rechazadas por la barrera de alcance configurable. La nota de cambio de modelo

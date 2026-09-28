@@ -160,3 +160,31 @@ def test_stream_ask_emits_draft_deltas_then_done(monkeypatch) -> None:
     assert done["citations"][0]["url"] == "http://x"
     # /ask runs the same nodes without a stream consumer and must get the same answer.
     assert agent.ask("how?").answer == "Use f() [1]"
+
+
+def test_chat_stream_skips_chunks_without_text(monkeypatch) -> None:
+    # Azure interleaves content-filter annotations: a chunk with no choices, and
+    # chunks whose choice has delta=None. Both must be skipped, not crash.
+    from repo_expert.agent import llm
+
+    def chunk(choices):
+        return SimpleNamespace(choices=choices)
+
+    def choice(delta):
+        return SimpleNamespace(delta=delta)
+
+    stream = [
+        chunk([]),
+        chunk([choice(SimpleNamespace(content="Hola"))]),
+        chunk([choice(None)]),
+        chunk([choice(SimpleNamespace(content=None))]),
+        chunk([choice(SimpleNamespace(content=" mundo"))]),
+    ]
+    fake_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=lambda **k: iter(stream)))
+    )
+    monkeypatch.setattr(llm, "get_openai_client", lambda: fake_client)
+    monkeypatch.setattr(
+        llm, "get_settings", lambda: SimpleNamespace(azure_openai_chat_deployment="d")
+    )
+    assert "".join(llm.chat_stream("sys", "user")) == "Hola mundo"

@@ -228,6 +228,11 @@ anything that breaks when the site's look or SEO changes lives in `jorge-pulgar-
   - Result: in production, 413 deltas spread over 2.6s (not buffered by the ingress),
     first text at 9.6s, `done` at 16.4s; CORS header present for the site origin;
     `/ask` unchanged (200, grounded, 12 citations).
+  - Hotfix 2026-09-28 (revision `streaming2`, image `p8-streaming-2`): some answers
+    crashed with `'NoneType' object has no attribute 'content'` on both endpoints. Azure
+    interleaves content-filter annotations with the streamed text, and some arrive as a
+    choice with `delta=None`; `chat_stream` only guarded the no-choices case. Found by
+    asking the live chat after the re-ingest; regression test added.
 - [ ] **P8-T11** — Widget: show the answer as it is written.
   - Commit: `feat(p8): type out streamed answers in the chat widget [P8-T11]`
   - Uses `/ask/stream` when the browser can read a response stream; on `404` (backend not

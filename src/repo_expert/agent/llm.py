@@ -94,9 +94,11 @@ def chat_stream(
     kwargs = _request(system, user, history=history, reasoning_effort=reasoning_effort)
     stream = get_openai_client().chat.completions.create(**kwargs, stream=True)
     for chunk in stream:
-        # Azure sends a first chunk with no choices (content-filter annotations).
-        if chunk.choices and chunk.choices[0].delta.content:
-            yield chunk.choices[0].delta.content
+        # Azure interleaves content-filter annotations with the text: a first chunk
+        # with no choices, and later chunks whose choice carries no delta at all.
+        delta = chunk.choices[0].delta if chunk.choices else None
+        if delta is not None and delta.content:
+            yield delta.content
 
 
 def chat_json(

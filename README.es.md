@@ -25,7 +25,8 @@ despertar el contenedor.
 
 ## Qué hace
 
-Un endpoint `/ask` de FastAPI entrega la pregunta a un agente **LangGraph** que
+Un endpoint `/ask` de FastAPI (o `/ask/stream`, que envía la respuesta mientras se
+escribe) entrega la pregunta a un agente **LangGraph** que
 enruta → recupera → genera con citas → autoverifica la fundamentación → amplía la
 búsqueda a las fuentes restantes si la respuesta no está respaldada (o la marca como no
 verificada cuando no queda nada que ampliar). La recuperación ejecuta **búsqueda vectorial
@@ -85,6 +86,31 @@ Efecto medido sobre el conjunto de portfolio: **hit@6 0.8 → 1.0** (carrera 0.6
 fidelidad 0.7 → 1.0. El delta completo está en
 [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) — incluida la advertencia de
 que el punto 5 es un arreglo de medición y no de calidad, y no debe leerse como tal.
+
+### Latencia: medir antes de cambiar
+
+Una respuesta tardaba 16–27 s, y ~95% de ese tiempo era el razonamiento de `gpt-5-mini`,
+no la infraestructura (Qdrant responde en ~0,5 s). Bajar el `reasoning_effort` es la
+palanca obvia, y cambia velocidad por calidad, así que cada paso se probó antes de
+publicarlo: ~150 ejecuciones en tres rondas (el set de evaluación, las preguntas de
+inicio, preguntas de seguimiento y 24 preguntas adversariales — premisas falsas, inyección
+de prompt, negación, "enumera todos"), con cada respuesta calificada por un árbitro de
+esfuerzo alto.
+
+| Cambio | Resultado | Decisión |
+|---|---|---|
+| Juez de fundamentación `medium → low` | misma precisión frente al árbitro (3 vs 2 falsos aprobados, 2 vs 2 falsos rechazos en 152 borradores), ~2 s más rápido | **publicado** |
+| Juez de fundamentación `minimal` | marcó 7 respuestas correctas como no verificadas en el set difícil | descartado |
+| Revisar solo cuando el fallback puede ampliar la ruta | en la instancia portfolio, con una sola fuente, una revisión repetía la misma recuperación: 5 revisiones, 0 arreglos, +10–20 s cada una | **publicado** |
+| Generación `medium → low` | ~6 s más rápido, pero 71/76 fieles vs 76/76 — fallaba en "enumera todos", negaciones y premisas falsas | descartado |
+| Reescritura de consulta `minimal` | calidad de respuesta 9,0 → 7,9 en las preguntas que reescribe | descartado |
+
+El resto de la espera es el modelo escribiendo, así que la respuesta ahora se transmite
+mientras se escribe: `POST /ask/stream` la envía como server-sent events desde el mismo
+grafo (`/ask` no cambia). El primer texto aparece a los ~10 s en lugar de la respuesta
+completa a los ~16 s, y el veredicto de fundamentación llega después como una etiqueta.
+La evaluación tras el despliegue no cambió (enrutamiento, hit@6, fidelidad y
+autofundamentación, todos 1.0).
 
 ### Protección frente a abuso
 
@@ -150,7 +176,8 @@ curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
 
 # ...o verla mientras se escribe (server-sent events)
-curl -N localhost:8000/ask/stream -H 'content-type: application/json' \n  -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
+curl -N localhost:8000/ask/stream -H 'content-type: application/json' \
+  -d '{"question": "¿Cómo maneja FastAPI la inyección de dependencias?"}'
 ```
 
 `GET /health` reporta la instancia activa, el repositorio objetivo y los conteos de

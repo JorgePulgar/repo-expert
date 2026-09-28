@@ -21,7 +21,8 @@ Scale-to-zero means the first request after an idle period takes a few seconds t
 
 ## What it does
 
-A FastAPI `/ask` endpoint hands the question to a **LangGraph** agent that
+A FastAPI `/ask` endpoint (or `/ask/stream`, which sends the answer as it is written)
+hands the question to a **LangGraph** agent that
 routes → retrieves → generates with citations → self-checks grounding → widens the
 search to the remaining sources if the answer isn't supported (or flags it as unverified
 when there is nothing left to widen). Retrieval runs **vector search over Qdrant Cloud**
@@ -77,6 +78,29 @@ Measured effect on the portfolio set: **hit@6 0.8 → 1.0** (career 0.6 → 1.0)
 0.7 → 1.0. See [`docs/eval-qdrant-vs-azure.md`](docs/eval-qdrant-vs-azure.md) for the full
 delta — including the caveat that item 5 is a measurement fix, not a quality gain, and
 should not be read as one.
+
+### Latency: measured before changing
+
+An answer took 16–27 s, and ~95% of that was `gpt-5-mini` reasoning, not infrastructure
+(Qdrant answers in ~0.5 s). Lowering `reasoning_effort` is the obvious lever, and it trades
+speed for quality, so every step was tested before shipping: ~150 runs over three rounds
+(the eval set, the starter questions, follow-ups, and 24 adversarial questions — false
+premises, prompt injection, negation, "list all"), each answer graded by a high-effort
+referee.
+
+| Change | Result | Decision |
+|---|---|---|
+| Grounding judge `medium → low` | same accuracy against the referee (3 vs 2 false passes, 2 vs 2 false rejections over 152 drafts), ~2 s faster | **shipped** |
+| Grounding judge `minimal` | flagged 7 correct answers as unverified on the hard set | rejected |
+| Revise only when the fallback can widen the route | in the one-source portfolio instance a revision re-ran the same retrieval: 5 fired, 0 fixed, +10–20 s each | **shipped** |
+| Generation `medium → low` | ~6 s faster, but 71/76 faithful vs 76/76 — it failed "list all", negation and false-premise questions | rejected |
+| Query rewrite `minimal` | answer quality 9.0 → 7.9 on the questions it rewrites | rejected |
+
+The rest of the wait is the model writing, so the answer is now streamed:
+`POST /ask/stream` sends it as server-sent events from the same graph (`/ask` is
+unchanged). The first text appears after ~10 s instead of the whole answer after ~16 s,
+and the grounding verdict follows as a badge. The eval after deploy was unchanged
+(routing, hit@6, faithfulness and self-grounding all 1.0).
 
 ### Abuse protection
 
@@ -141,7 +165,8 @@ curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "How does FastAPI handle dependency injection?"}'
 
 # ...or watch it being written (server-sent events)
-curl -N localhost:8000/ask/stream -H 'content-type: application/json' \n  -d '{"question": "How does FastAPI handle dependency injection?"}'
+curl -N localhost:8000/ask/stream -H 'content-type: application/json' \
+  -d '{"question": "How does FastAPI handle dependency injection?"}'
 ```
 
 `GET /health` reports the active instance, target repo, and per-index document counts.
